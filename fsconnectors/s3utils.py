@@ -384,16 +384,17 @@ async def main():
         subparser.add_argument('--s3_path', required=True, type=str, help='S3 path to folder or file')
         subparser.add_argument('--local_path', required=True, type=str, help='local path to folder or file')
         subparser.add_argument('--config_path', required=True, type=str, help='path to configuration file')
+        subparser.add_argument('--workers', type=int, default=16, help='Number of parallel async workers')
     args = parser.parse_args()
 
     config = parse_config(args.config_path)
 
     s3util = S3Util(**config)
     if args.action == 'upload':
-        error_files = await s3util.upload(local_path=args.local_path, s3_path=args.s3_path)
+        error_files = await s3util.upload(local_path=args.local_path, s3_path=args.s3_path, num_workers=args.workers)
         print(f'Error files: {error_files}')
     elif args.action == 'download':
-        error_files = await s3util.download(local_path=args.local_path, s3_path=args.s3_path)
+        error_files = await s3util.download(local_path=args.local_path, s3_path=args.s3_path, num_workers=args.workers)
         print(f'Error files: {error_files}')
     else:
         raise ValueError(f"Action mast be 'upload' or 'download', got '{args.action}'")
