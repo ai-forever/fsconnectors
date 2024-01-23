@@ -1,0 +1,6 @@
+pyyaml
+argparse
+aiofiles
+aioboto3
+asyncio-pool
+tqdm
