@@ -1,6 +1,5 @@
-pyyaml
-argparse
-aiofiles
+PyYAML
+boto3
 aioboto3
-asyncio-pool
-tqdm
+aiofiles
+aioshutil

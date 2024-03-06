@@ -1,1 +1,3 @@
-from .s3utils import parse_config, S3Util
+from fsconnectors.asyncio import *
+from fsconnectors.s3 import S3Connector
+from fsconnectors.local import LocalConnector
