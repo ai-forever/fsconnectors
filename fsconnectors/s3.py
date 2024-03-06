@@ -6,7 +6,7 @@ from typing import Union, List, IO, Literal
 
 from fsconnectors.connector import Connector
 from fsconnectors.utils.entry import FSEntry
-from fsconnectors.utils.s3 import MultipartWriter
+from fsconnectors.utils.multipart import MultipartWriter
 
 
 class S3Connector(Connector):
@@ -18,12 +18,9 @@ class S3Connector(Connector):
         aws_access_key_id: str,
         aws_secret_access_key: str
     ):
-        self.client = boto3.client(
-            's3',
-            endpoint_url=endpoint_url,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key
-        )
+        self.endpoint_url = endpoint_url
+        self.aws_access_key_id = aws_access_key_id
+        self.aws_secret_access_key = aws_secret_access_key
 
     @classmethod
     def from_yaml(cls, path: str) -> 'S3Connector':
@@ -34,9 +31,10 @@ class S3Connector(Connector):
     @contextmanager
     def open(self, path: str, mode: Literal['rb', 'wb'] = 'rb', multipart: bool = False) -> Union[IO, MultipartWriter]:
         try:
+            client = self._get_client()
             bucket, key = self._split_path(path)
             if mode == 'rb':
-                obj = self.client.get_object(Bucket=bucket, Key=key)
+                obj = client.get_object(Bucket=bucket, Key=key)
                 stream = obj['Body']
             elif mode == 'wb':
                 if multipart:
@@ -56,13 +54,17 @@ class S3Connector(Connector):
                     stream.seek(0)
                     self.client.put_object(Body=stream.read(), Bucket=bucket, Key=key)
                     stream.close()
+            client.close()
 
     def mkdir(self, path: str):
+        client = self._get_client()
         path = path.rstrip('/') + '/'
         bucket, key = self._split_path(path)
-        self.client.put_object(Bucket=bucket, Key=key)
+        client.put_object(Bucket=bucket, Key=key)
+        client.close()
 
     def copy(self, src_path: str, dst_path: str, recursive: bool = False):
+        client = self._get_client()
         if recursive:
             src_path = src_path.rstrip('/') + '/'
             dst_path = dst_path.rstrip('/') + '/'
@@ -71,26 +73,29 @@ class S3Connector(Connector):
             paths = self.listdir(src_path, recursive)
             for path in paths:
                 path_bucket, path_key = self._split_path(path)
-                self.client.copy(dict(Bucket=path_bucket, Key=path_key), dst_bucket, path_key.replace(src_key, dst_key))
+                client.copy(dict(Bucket=path_bucket, Key=path_key), dst_bucket, path_key.replace(src_key, dst_key))
         else:
             src_bucket, src_key = self._split_path(src_path)
             dst_bucket, dst_key = self._split_path(dst_path)
-            self.client.copy(dict(Bucket=src_bucket, Key=src_key), dst_bucket, dst_key)
+            client.copy(dict(Bucket=src_bucket, Key=src_key), dst_bucket, dst_key)
+        client.close()
 
     def move(self, src_path: str, dst_path: str, recursive: bool = False):
         self.copy(src_path, dst_path, recursive)
         self.remove(src_path, recursive)
 
     def remove(self, path: str, recursive: bool = False):
+        client = self._get_client()
         if recursive:
             path = path.rstrip('/') + '/'
             paths = self.listdir(path, recursive)
             for path in paths:
                 path_bucket, path_key = self._split_path(path)
-                self.client.delete_object(Bucket=path_bucket, Key=path_key)
+                client.delete_object(Bucket=path_bucket, Key=path_key)
         else:
             bucket, key = self._split_path(path)
-            self.client.delete_object(Bucket=bucket, Key=key)
+            client.delete_object(Bucket=bucket, Key=key)
+        client.close()
 
     def listdir(self, path: str, recursive: bool = False) -> List[str]:
         entries = self.scandir(path, recursive)
@@ -101,10 +106,11 @@ class S3Connector(Connector):
         return result
 
     def scandir(self, path: str, recursive: bool = False) -> List[FSEntry]:
+        client = self._get_client()
         result = []
         path = path.rstrip('/') + '/'
         bucket, prefix = self._split_path(path)
-        paginator = self.client.get_paginator('list_objects')
+        paginator = client.get_paginator('list_objects')
         if recursive:
             paginator_result = paginator.paginate(Bucket=bucket, Prefix=prefix, PaginationConfig={'PageSize': 1000})
         else:
@@ -124,7 +130,17 @@ class S3Connector(Connector):
                     size = item.get('Size')
                     last_modified = item.get('LastModified')
                     result.append(FSEntry(name, path, 'file', size, last_modified))
+        client.close()
         return result
+
+    def _get_client(self):
+        client = boto3.client(
+            's3',
+            endpoint_url=self.endpoint_url,
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key
+        )
+        return client
 
     @staticmethod
     def _split_path(path: str) -> List[str]:

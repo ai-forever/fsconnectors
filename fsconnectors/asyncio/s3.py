@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from typing import Union, List, IO, Literal
 
 from fsconnectors.utils.entry import FSEntry
-from fsconnectors.utils.s3 import AsyncMultipartWriter
+from fsconnectors.utils.multipart import AsyncMultipartWriter
 from fsconnectors.asyncio.connector import AsyncConnector
 
 
