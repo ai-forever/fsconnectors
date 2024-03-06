@@ -7,12 +7,19 @@ from fsconnectors.utils.entry import FSEntry
 
 
 class AsyncConnector(Connector):
-    """Abstract class for async connector"""
+    """Abstract class for async connector."""
 
     @classmethod
     @abstractmethod
     @asynccontextmanager
     async def connect(cls) -> 'AsyncConnector':
+        """Connects to file system.
+
+        Yields
+        -------
+        AsyncConnector
+            Class instance
+        """
         pass
 
     @abstractmethod

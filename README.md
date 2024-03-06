@@ -65,40 +65,40 @@ asyncio.run(foo())
 
 ### Connector
 * `open(path, mode)` - open file
-  * params:
+  * parameters:
     * `path: str` - path to file
     * `mode: str` - open mode (only 'rb' and 'wb' for S3 connectors)
-    * `multipart: bool = False` - use multipart write (only for S3 connectors)
-  * return:
-    * `IO` - file like object
+    * `multipart: bool = False` - use multipart writer (only for S3 connectors)
+  * returns:
+    * `IO` - file-like object
 * `mkdir(path)` - make directory
-  * params:
+  * parameters:
     * `path: str` - directory path
 * `copy(src_path, dst_path, recursive)` - copy file or directory
-  * params:
+  * parameters:
     * `src_path: str` - source path
     * `dst_path: str` - destination path
     * `recursive: bool = False` - recursive
 * `move(src_path, dst_path, recursive)` - move file or directory
-  * params:
+  * parameters:
     * `src_path: str` - source path
     * `dst_path: str` - destination path
     * `recursive: bool = False` - recursive
 * `remove(path, recursive)` - delete file or directory
-  * params:
+  * parameters:
     * `path: str` - path to file or directory
     * `recursive: bool = False` - recursive
 * `listdir(path, recursive)` - list directory content
-  * params:
+  * parameters:
     * `path: str` - directory path
     * `recursive: bool = False` - recursive
-  * return:
+  * returns:
     * `List[str]` - list of directory contents
 * `scandir(path, recursive)` - list directory content with metadata
-  * params:
+  * parameters:
     * `path: str` - directory path
     * `recursive: bool = False` - recursive
-  * return:
+  * returns:
     * `List[FSEntry]` - list of directory contents with metadata
 
 ### FSEntry

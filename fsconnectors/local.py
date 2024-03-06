@@ -9,7 +9,7 @@ from fsconnectors.utils.entry import FSEntry
 
 
 class LocalConnector(Connector):
-    """Local file system connector"""
+    """Local file system connector."""
 
     @contextmanager
     def open(self, path: str, mode: str = 'r') -> IO:

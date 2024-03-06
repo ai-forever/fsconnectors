@@ -10,7 +10,7 @@ from fsconnectors.asyncio.connector import AsyncConnector
 
 
 class AsyncS3Connector(AsyncConnector):
-    """Async S3 connector"""
+    """Async S3 connector."""
 
     @classmethod
     @asynccontextmanager
@@ -20,6 +20,22 @@ class AsyncS3Connector(AsyncConnector):
         aws_access_key_id: str,
         aws_secret_access_key: str
     ) -> 'AsyncS3Connector':
+        """Connects to file system.
+
+        Parameters
+        ----------
+        endpoint_url : str
+            Endpoint URL.
+        aws_access_key_id : str
+            AWS access key ID
+        aws_secret_access_key : str
+            AWS secret access key
+
+        Yields
+        -------
+        AsyncS3Connector
+            Class instance
+        """
         self = cls()
         async with aioboto3.Session().client(
                 's3', endpoint_url=endpoint_url,
@@ -32,6 +48,18 @@ class AsyncS3Connector(AsyncConnector):
     @classmethod
     @asynccontextmanager
     async def from_yaml(cls, path: str) -> 'AsyncS3Connector':
+        """Creates class instance from configuration path.
+
+        Parameters
+        ----------
+        path : str
+            path to configuration file.
+
+        Yields
+        -------
+        AsyncS3Connector
+            Class instance
+        """
         with open(path) as f:
             config = yaml.safe_load(f)
         async with cls.connect(**config) as self:
@@ -39,6 +67,22 @@ class AsyncS3Connector(AsyncConnector):
 
     @asynccontextmanager
     async def open(self, path: str, mode: Literal['rb', 'wb'] = 'rb', multipart: bool = False) -> Union[IO, AsyncMultipartWriter]:
+        """Open file
+
+        Parameters
+        ----------
+        path : str
+            Path to file.
+        mode : str
+            Open mode.
+        multipart : bool, default=False
+            Use multipart writer.
+
+        Returns
+        -------
+        IO
+            File-like object.
+        """
         bucket, key = self._split_path(path)
         if mode == 'rb':
             obj = await self.client.get_object(Bucket=bucket, Key=key)

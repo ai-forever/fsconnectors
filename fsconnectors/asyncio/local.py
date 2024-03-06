@@ -11,11 +11,18 @@ from fsconnectors.asyncio.connector import AsyncConnector
 
 
 class AsyncLocalConnector(AsyncConnector):
-    """Async local file system connector"""
+    """Async local file system connector."""
 
     @classmethod
     @asynccontextmanager
     async def connect(cls) -> 'AsyncLocalConnector':
+        """Connects to file system.
+
+        Yields
+        -------
+        AsyncLocalConnector
+            Class instance
+        """
         yield cls()
 
     @asynccontextmanager

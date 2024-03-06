@@ -10,7 +10,17 @@ from fsconnectors.utils.multipart import MultipartWriter
 
 
 class S3Connector(Connector):
-    """S3 connector"""
+    """S3 connector.
+
+    Attributes
+    ----------
+    endpoint_url : str
+        Endpoint URL.
+    aws_access_key_id : str
+        AWS access key ID
+    aws_secret_access_key : str
+        AWS secret access key
+    """
 
     def __init__(
         self,
@@ -24,12 +34,40 @@ class S3Connector(Connector):
 
     @classmethod
     def from_yaml(cls, path: str) -> 'S3Connector':
+        """Creates class instance from configuration path.
+
+        Parameters
+        ----------
+        path : str
+            path to configuration file.
+
+        Returns
+        -------
+        S3Connector
+            Class instance
+        """
         with open(path) as f:
             config = yaml.safe_load(f)
         return cls(**config)
 
     @contextmanager
     def open(self, path: str, mode: Literal['rb', 'wb'] = 'rb', multipart: bool = False) -> Union[IO, MultipartWriter]:
+        """Open file.
+
+        Parameters
+        ----------
+        path : str
+            Path to file.
+        mode : str
+            Open mode.
+        multipart : bool, default=False
+            Use multipart writer.
+
+        Returns
+        -------
+        IO
+            File-like object.
+        """
         try:
             client = self._get_client()
             bucket, key = self._split_path(path)
