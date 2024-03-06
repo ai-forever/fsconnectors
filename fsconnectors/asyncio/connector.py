@@ -25,21 +25,21 @@ class AsyncConnector(Connector):
         pass
 
     @abstractmethod
-    async def copy(self, src_path: str, dst_path: str, recursive: bool):
+    async def copy(self, src_path: str, dst_path: str, recursive: bool = False):
         pass
 
     @abstractmethod
-    async def move(self, src_path: str, dst_path: str, recursive: bool):
+    async def move(self, src_path: str, dst_path: str, recursive: bool = False):
         pass
 
     @abstractmethod
-    async def remove(self, path: str, recursive: bool):
+    async def remove(self, path: str, recursive: bool = False):
         pass
 
     @abstractmethod
-    async def listdir(self, path: str, recursive: bool) -> List[str]:
+    async def listdir(self, path: str, recursive: bool = False) -> List[str]:
         pass
 
     @abstractmethod
-    async def scandir(self, path: str, recursive: bool) -> List[FSEntry]:
+    async def scandir(self, path: str, recursive: bool = False) -> List[FSEntry]:
         pass
