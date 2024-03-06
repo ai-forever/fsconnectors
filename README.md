@@ -2,6 +2,7 @@
 File system connectors.
 
 ## Contents
+* [Installation](#installation)
 * [Usage](#usage)
   * [LocalConnector](#localconnector)
   * [S3Connector](#s3connector)
@@ -9,6 +10,13 @@ File system connectors.
 * [API](#api)
   * [Connector](#connector)
   * [FSEntry](#fsentry)
+
+## Installation
+```commandline
+git clone https://github.com/ai-forever/fsconnectors
+cd fsconnectors/
+pip install -r requirements.txt
+```
 
 ## Usage
 
