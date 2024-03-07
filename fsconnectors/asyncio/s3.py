@@ -1,12 +1,13 @@
-import yaml
+from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator, List
+
 import aioboto3
 import aiofiles.tempfile
-from contextlib import asynccontextmanager
-from typing import List, Any, AsyncGenerator
+import yaml
 
+from fsconnectors.asyncio.connector import AsyncConnector
 from fsconnectors.utils.entry import FSEntry
 from fsconnectors.utils.multipart import AsyncMultipartWriter
-from fsconnectors.asyncio.connector import AsyncConnector
 
 
 class AsyncS3Connector(AsyncConnector):

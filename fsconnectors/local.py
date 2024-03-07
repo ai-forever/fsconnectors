@@ -1,8 +1,8 @@
+import datetime
 import os
 import shutil
-import datetime
-from typing import List, Any
 from contextlib import contextmanager
+from typing import Any, List
 
 from fsconnectors.connector import Connector
 from fsconnectors.utils.entry import FSEntry

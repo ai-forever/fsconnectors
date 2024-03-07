@@ -1,8 +1,9 @@
-import yaml
-import boto3
 import tempfile
-from typing import List, Any
 from contextlib import contextmanager
+from typing import Any, List
+
+import boto3
+import yaml
 
 from fsconnectors.connector import Connector
 from fsconnectors.utils.entry import FSEntry

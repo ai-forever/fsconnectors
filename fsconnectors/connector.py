@@ -1,6 +1,6 @@
-from typing import List, Any
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from typing import Any, List
 
 from fsconnectors.utils.entry import FSEntry
 
