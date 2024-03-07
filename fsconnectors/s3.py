@@ -2,7 +2,7 @@ import yaml
 import boto3
 import tempfile
 from contextlib import contextmanager
-from typing import Union, List, IO, Literal
+from typing import List, Any, Literal
 
 from fsconnectors.connector import Connector
 from fsconnectors.utils.entry import FSEntry
@@ -51,7 +51,7 @@ class S3Connector(Connector):
         return cls(**config)
 
     @contextmanager
-    def open(self, path: str, mode: Literal['rb', 'wb'] = 'rb', multipart: bool = False) -> Union[IO, MultipartWriter]:
+    def open(self, path: str, mode: Literal['rb', 'wb'] = 'rb', multipart: bool = False) -> Any:
         """Open file.
 
         Parameters
@@ -65,8 +65,8 @@ class S3Connector(Connector):
 
         Returns
         -------
-        IO
-            File-like object.
+        Any
+            Readable/writable file-like object.
         """
         try:
             client = self._get_client()
@@ -94,14 +94,14 @@ class S3Connector(Connector):
                     stream.close()
             client.close()
 
-    def mkdir(self, path: str):
+    def mkdir(self, path: str) -> None:
         client = self._get_client()
         path = path.rstrip('/') + '/'
         bucket, key = self._split_path(path)
         client.put_object(Bucket=bucket, Key=key)
         client.close()
 
-    def copy(self, src_path: str, dst_path: str, recursive: bool = False):
+    def copy(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         client = self._get_client()
         if recursive:
             src_path = src_path.rstrip('/') + '/'
@@ -118,11 +118,11 @@ class S3Connector(Connector):
             client.copy(dict(Bucket=src_bucket, Key=src_key), dst_bucket, dst_key)
         client.close()
 
-    def move(self, src_path: str, dst_path: str, recursive: bool = False):
+    def move(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         self.copy(src_path, dst_path, recursive)
         self.remove(src_path, recursive)
 
-    def remove(self, path: str, recursive: bool = False):
+    def remove(self, path: str, recursive: bool = False) -> None:
         client = self._get_client()
         if recursive:
             path = path.rstrip('/') + '/'
@@ -171,7 +171,7 @@ class S3Connector(Connector):
         client.close()
         return result
 
-    def _get_client(self):
+    def _get_client(self) -> Any:
         client = boto3.client(
             's3',
             endpoint_url=self.endpoint_url,
