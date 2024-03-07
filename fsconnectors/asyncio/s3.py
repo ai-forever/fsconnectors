@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, List
+from typing import Any, AsyncGenerator, AsyncIterator, List, Union
 
 import aioboto3
 import aiofiles.tempfile
 import yaml
+from aiofiles.base import AiofilesContextManager
 
 from fsconnectors.asyncio.connector import AsyncConnector
 from fsconnectors.utils.entry import FSEntry
@@ -70,7 +71,7 @@ class AsyncS3Connector(AsyncConnector):
         return cls(**config)
 
     @asynccontextmanager
-    async def open(self, path: str, mode: str = 'rb', multipart: bool = False) -> Any:
+    async def open(self, path: str, mode: str = 'rb', multipart: bool = False) -> AsyncIterator[Union[AiofilesContextManager, AsyncMultipartWriter]]:
         """Open file
 
         Parameters

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, List
+from typing import Any, AsyncGenerator, AsyncIterator, List
 
 from fsconnectors.utils.entry import FSEntry
 
@@ -9,7 +9,7 @@ class AsyncConnector(ABC):
     """Abstract class for async connector."""
 
     @asynccontextmanager
-    async def connect(self) -> AsyncGenerator[Any, None]:
+    async def connect(self) -> AsyncGenerator['AsyncConnector', None]:
         """Connects to file system.
 
         Yields
@@ -21,7 +21,7 @@ class AsyncConnector(ABC):
 
     @abstractmethod
     @asynccontextmanager
-    async def open(self, path: str, mode: str) -> Any:
+    async def open(self, path: str, mode: str) -> AsyncIterator[Any]:
         yield None
 
     @abstractmethod
