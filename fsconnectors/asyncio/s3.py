@@ -51,8 +51,7 @@ class AsyncS3Connector(AsyncConnector):
             yield self
 
     @classmethod
-    @asynccontextmanager
-    async def from_yaml(cls, path: str) -> 'AsyncS3Connector':
+    def from_yaml(cls, path: str) -> 'AsyncS3Connector':
         """Creates class instance from configuration path.
 
         Parameters
@@ -60,15 +59,14 @@ class AsyncS3Connector(AsyncConnector):
         path : str
             path to configuration file.
 
-        Yields
+        Returns
         -------
         AsyncS3Connector
             Class instance.
         """
         with open(path) as f:
             config = yaml.safe_load(f)
-        async with cls.connect(**config) as self:
-            yield self
+        return cls(**config)
 
     @asynccontextmanager
     async def open(self, path: str, mode: str = 'rb', multipart: bool = False) -> Any:
