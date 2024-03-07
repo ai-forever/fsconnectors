@@ -1,4 +1,4 @@
-from typing import List, IO
+from typing import List, Any
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 
@@ -10,7 +10,7 @@ class Connector(ABC):
 
     @abstractmethod
     @contextmanager
-    def open(self, path: str, mode: str) -> IO:
+    def open(self, path: str, mode: str) -> Any:
         """Open file.
 
         Parameters
@@ -22,13 +22,13 @@ class Connector(ABC):
 
         Returns
         -------
-        IO
-            File-like object.
+        Any
+            Readable/writable file-like object.
         """
         pass
 
     @abstractmethod
-    def mkdir(self, path: str):
+    def mkdir(self, path: str) -> None:
         """Make directory.
 
         Parameters
@@ -39,7 +39,7 @@ class Connector(ABC):
         pass
 
     @abstractmethod
-    def copy(self, src_path: str, dst_path: str, recursive: bool = False):
+    def copy(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         """Copy file or directory.
 
         Parameters
@@ -54,7 +54,7 @@ class Connector(ABC):
         pass
 
     @abstractmethod
-    def move(self, src_path: str, dst_path: str, recursive: bool = False):
+    def move(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         """Move file or directory.
 
         Parameters
@@ -69,7 +69,7 @@ class Connector(ABC):
         pass
 
     @abstractmethod
-    def remove(self, path: str, recursive: bool = False):
+    def remove(self, path: str, recursive: bool = False) -> None:
         """Delete file or directory.
 
         Parameters
