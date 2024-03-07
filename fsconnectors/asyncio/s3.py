@@ -1,8 +1,8 @@
 import yaml
 import aioboto3
 import aiofiles.tempfile
-from typing import List, Any, Literal
 from contextlib import asynccontextmanager
+from typing import List, Any, AsyncGenerator
 
 from fsconnectors.utils.entry import FSEntry
 from fsconnectors.utils.multipart import AsyncMultipartWriter
@@ -19,7 +19,7 @@ class AsyncS3Connector(AsyncConnector):
         endpoint_url: str,
         aws_access_key_id: str,
         aws_secret_access_key: str
-    ) -> 'AsyncS3Connector':
+    ) -> AsyncGenerator['AsyncS3Connector', None]:
         """Connects to file system.
 
         Parameters

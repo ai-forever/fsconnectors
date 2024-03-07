@@ -1,6 +1,6 @@
-from typing import List, Any
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
+from typing import List, Any, AsyncGenerator
 
 from fsconnectors.utils.entry import FSEntry
 
@@ -11,7 +11,7 @@ class AsyncConnector(ABC):
     @classmethod
     @abstractmethod
     @asynccontextmanager
-    async def connect(cls, *args, **kwargs) -> 'AsyncConnector':
+    async def connect(cls, *args, **kwargs) -> AsyncGenerator['AsyncConnector', None]:
         """Connects to file system.
 
         Yields

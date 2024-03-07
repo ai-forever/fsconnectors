@@ -3,8 +3,8 @@ import datetime
 import aiofiles
 import aioshutil
 import aiofiles.os
-from typing import List, Any
 from contextlib import asynccontextmanager
+from typing import List, Any, AsyncGenerator
 
 from fsconnectors.utils.entry import FSEntry
 from fsconnectors.asyncio.connector import AsyncConnector
@@ -15,7 +15,7 @@ class AsyncLocalConnector(AsyncConnector):
 
     @classmethod
     @asynccontextmanager
-    async def connect(cls) -> 'AsyncLocalConnector':
+    async def connect(cls) -> AsyncGenerator['AsyncLocalConnector', None]:
         """Connects to file system.
 
         Yields
