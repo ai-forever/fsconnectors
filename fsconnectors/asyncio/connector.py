@@ -1,12 +1,11 @@
 from typing import List, Any
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
 
-from fsconnectors.connector import Connector
 from fsconnectors.utils.entry import FSEntry
 
 
-class AsyncConnector(Connector):
+class AsyncConnector(ABC):
     """Abstract class for async connector."""
 
     @classmethod
