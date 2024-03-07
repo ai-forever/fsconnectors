@@ -13,5 +13,5 @@ jobs:
     - run: pip install mypy ruff isort
     - run: pip install -r requirements.txt
     - run: mypy fsconnectors/
-    - run: isort --check fsconnectors/
     - run: ruff check fsconnectors/ --config pyproject.toml
+    - run: isort --check fsconnectors/
