@@ -12,13 +12,7 @@ class MultipartWriter:
         S3 bucket.
     key : str
         S3 file key.
-    _upload_id : str
-        Upload ID.
-    _part_num : int
-        Part number.
-    _part_info : Dict[Any, Any]
-        Parts info.
-        """
+    """
 
     def __init__(
         self,
@@ -31,7 +25,7 @@ class MultipartWriter:
         self.key = key
         self._upload_id = ''
         self._part_num = 0
-        self._part_info = dict(Parts=[])
+        self._part_info: Dict[Any, Any] = dict(Parts=[])
 
     @classmethod
     def open(
@@ -99,12 +93,6 @@ class AsyncMultipartWriter:
         S3 bucket.
     key : str
         S3 file key.
-    _upload_id : str
-        Upload ID.
-    _part_num : int
-        Part number.
-    _part_info : Dict[Any, Any]
-        Parts info.
     """
 
     def __init__(
@@ -118,7 +106,7 @@ class AsyncMultipartWriter:
         self.key = key
         self._upload_id = ''
         self._part_num = 0
-        self._part_info = dict(Parts=[])
+        self._part_info: Dict[Any, Any] = dict(Parts=[])
 
     @classmethod
     async def open(
