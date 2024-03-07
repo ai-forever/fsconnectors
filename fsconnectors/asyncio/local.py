@@ -3,7 +3,7 @@ import datetime
 import aiofiles
 import aioshutil
 import aiofiles.os
-from typing import List, IO
+from typing import List, Any
 from contextlib import asynccontextmanager
 
 from fsconnectors.utils.entry import FSEntry
@@ -26,14 +26,14 @@ class AsyncLocalConnector(AsyncConnector):
         yield cls()
 
     @asynccontextmanager
-    async def open(self, path: str, mode: str = 'r') -> IO:
+    async def open(self, path: str, mode: str = 'r') -> Any:
         async with aiofiles.open(path, mode) as f:
             yield f
 
-    async def mkdir(self, path: str):
+    async def mkdir(self, path: str) -> None:
         await aiofiles.os.makedirs(path, exist_ok=True)
 
-    async def copy(self, src_path: str, dst_path: str, recursive: bool = False):
+    async def copy(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         if not await aiofiles.os.path.exists(src_path):
             raise FileNotFoundError(f"No such file or directory: '{src_path}'")
         elif await aiofiles.os.path.isdir(src_path) and recursive:
@@ -43,7 +43,7 @@ class AsyncLocalConnector(AsyncConnector):
         else:
             raise ValueError(f"'{src_path}' is a directory, but recursive mode is disabled")
 
-    async def move(self, src_path: str, dst_path: str, recursive: bool = False):
+    async def move(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         if not await aiofiles.os.path.exists(src_path):
             raise FileNotFoundError(f"No such file or directory: '{src_path}'")
         elif (await aiofiles.os.path.isdir(src_path) and recursive) or await aiofiles.os.path.isfile(src_path):
@@ -51,7 +51,7 @@ class AsyncLocalConnector(AsyncConnector):
         else:
             raise ValueError(f"'{src_path}' is a directory, but recursive mode is disabled")
 
-    async def remove(self, path: str, recursive: bool = False):
+    async def remove(self, path: str, recursive: bool = False) -> None:
         if not await aiofiles.os.path.exists(path):
             raise FileNotFoundError(f"No such file or directory: '{path}'")
         elif await aiofiles.os.path.isdir(path) and recursive:

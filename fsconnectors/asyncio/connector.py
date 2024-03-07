@@ -1,4 +1,4 @@
-from typing import List, IO
+from typing import List, Any
 from abc import abstractmethod
 from contextlib import asynccontextmanager
 
@@ -24,23 +24,23 @@ class AsyncConnector(Connector):
 
     @abstractmethod
     @asynccontextmanager
-    async def open(self, path: str, mode: str) -> IO:
+    async def open(self, path: str, mode: str) -> Any:
         pass
 
     @abstractmethod
-    async def mkdir(self, path: str):
+    async def mkdir(self, path: str) -> None:
         pass
 
     @abstractmethod
-    async def copy(self, src_path: str, dst_path: str, recursive: bool = False):
+    async def copy(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         pass
 
     @abstractmethod
-    async def move(self, src_path: str, dst_path: str, recursive: bool = False):
+    async def move(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         pass
 
     @abstractmethod
-    async def remove(self, path: str, recursive: bool = False):
+    async def remove(self, path: str, recursive: bool = False) -> None:
         pass
 
     @abstractmethod

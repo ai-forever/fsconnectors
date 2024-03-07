@@ -1,8 +1,8 @@
 import yaml
 import aioboto3
 import aiofiles.tempfile
+from typing import List, Any, Literal
 from contextlib import asynccontextmanager
-from typing import Union, List, IO, Literal
 
 from fsconnectors.utils.entry import FSEntry
 from fsconnectors.utils.multipart import AsyncMultipartWriter
@@ -66,7 +66,7 @@ class AsyncS3Connector(AsyncConnector):
             yield self
 
     @asynccontextmanager
-    async def open(self, path: str, mode: Literal['rb', 'wb'] = 'rb', multipart: bool = False) -> Union[IO, AsyncMultipartWriter]:
+    async def open(self, path: str, mode: str = 'rb', multipart: bool = False) -> Any:
         """Open file
 
         Parameters
@@ -102,12 +102,12 @@ class AsyncS3Connector(AsyncConnector):
         else:
             raise ValueError(f"invalid mode: '{mode}'")
 
-    async def mkdir(self, path: str):
+    async def mkdir(self, path: str) -> None:
         path = path.rstrip('/') + '/'
         bucket, key = self._split_path(path)
         await self.client.put_object(Bucket=bucket, Key=key)
 
-    async def copy(self, src_path: str, dst_path: str, recursive: bool = False):
+    async def copy(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         if recursive:
             src_path = src_path.rstrip('/') + '/'
             dst_path = dst_path.rstrip('/') + '/'
@@ -122,11 +122,11 @@ class AsyncS3Connector(AsyncConnector):
             dst_bucket, dst_key = self._split_path(dst_path)
             await self.client.copy(dict(Bucket=src_bucket, Key=src_key), dst_bucket, dst_key)
 
-    async def move(self, src_path: str, dst_path: str, recursive: bool = False):
+    async def move(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         await self.copy(src_path, dst_path, recursive)
         await self.remove(src_path, recursive)
 
-    async def remove(self, path: str, recursive: bool = False):
+    async def remove(self, path: str, recursive: bool = False) -> None:
         if recursive:
             path = path.rstrip('/') + '/'
             paths = await self.listdir(path, recursive)
