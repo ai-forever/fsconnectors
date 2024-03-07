@@ -70,7 +70,7 @@ asyncio.run(foo())
     * `mode: str` - open mode (only 'rb' and 'wb' for S3 connectors)
     * `multipart: bool = False` - use multipart writer (only for S3 connectors)
   * returns:
-    * `IO` - file-like object
+    * `Union[ContextManager, AsyncContextManager]` - file-like object
 * `mkdir(path)` - make directory
   * parameters:
     * `path: str` - directory path
