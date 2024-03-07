@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, AsyncIterator, List
+from typing import Any, AsyncContextManager, AsyncGenerator, List
 
 from fsconnectors.utils.entry import FSEntry
 
@@ -15,14 +15,13 @@ class AsyncConnector(ABC):
         Yields
         -------
         AsyncConnector
-            Class instance
+            Class instance.
         """
         yield self
 
     @abstractmethod
-    @asynccontextmanager
-    async def open(self, path: str, mode: str) -> AsyncIterator[Any]:
-        yield None
+    async def open(self, path: str, mode: str) -> AsyncContextManager[Any]:
+        pass
 
     @abstractmethod
     async def mkdir(self, path: str) -> None:

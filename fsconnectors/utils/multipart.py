@@ -1,7 +1,11 @@
+import tempfile
+from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from typing import Any, Dict, Optional
 
+import aiofiles.tempfile
 
-class MultipartWriter:
+
+class MultipartWriter(AbstractContextManager[Any]):
     """Multipart S3 writer.
 
     Attributes
@@ -27,35 +31,11 @@ class MultipartWriter:
         self._part_num = 0
         self._part_info: Dict[Any, Any] = {'Parts': []}
 
-    @classmethod
-    def open(
-        cls,
-        client: Any,
-        Bucket: str,
-        Key: str
-    ) -> 'MultipartWriter':
-        self = cls(client, Bucket, Key)
+    def __enter__(self) -> None:
         resp = self.client.create_multipart_upload(Bucket=self.bucket, Key=self.key)
         self._upload_id = resp['UploadId']
-        return self
 
-    def write(self, data: bytes, part_num: Optional[int] = None) -> None:
-        if part_num is None:
-            part_num = self._part_num = self._part_num + 1
-        elif 1 <= part_num <= 10000:
-            self._part_num += 1
-        else:
-            raise ValueError('part_num must be an integer between 1 and 1000')
-        resp = self.client.upload_part(Bucket=self.bucket, Body=data,
-                                       UploadId=self._upload_id, PartNumber=part_num, Key=self.key)
-        self._part_info['Parts'].append(
-            {
-                'PartNumber': part_num,
-                'ETag': resp['ETag']
-            }
-        )
-
-    def close(self) -> None:
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         resp = self.client.list_parts(
             Bucket=self.bucket,
             Key=self.key,
@@ -81,8 +61,24 @@ class MultipartWriter:
             raise RuntimeError(f'Write aborted!\n'
                                f'{self._part_num} parts transmitted, {len(uploaded_parts)} received, {loss}% loss')
 
+    def write(self, data: bytes, part_num: Optional[int] = None) -> None:
+        if part_num is None:
+            part_num = self._part_num = self._part_num + 1
+        elif 1 <= part_num <= 10000:
+            self._part_num += 1
+        else:
+            raise ValueError('part_num must be an integer between 1 and 1000')
+        resp = self.client.upload_part(Bucket=self.bucket, Body=data,
+                                       UploadId=self._upload_id, PartNumber=part_num, Key=self.key)
+        self._part_info['Parts'].append(
+            {
+                'PartNumber': part_num,
+                'ETag': resp['ETag']
+            }
+        )
 
-class AsyncMultipartWriter:
+
+class AsyncMultipartWriter(AbstractAsyncContextManager[Any]):
     """Async multipart S3 writer.
 
     Attributes
@@ -105,38 +101,14 @@ class AsyncMultipartWriter:
         self.bucket = bucket
         self.key = key
         self._upload_id = ''
-        self._part_num = 0
+        self._part_num: int = 0
         self._part_info: Dict[Any, Any] = {'Parts': []}
 
-    @classmethod
-    async def open(
-        cls,
-        client: Any,
-        Bucket: str,
-        Key: str
-    ) -> 'AsyncMultipartWriter':
-        self = cls(client, Bucket, Key)
+    async def __aenter__(self) -> None:
         resp = await self.client.create_multipart_upload(Bucket=self.bucket, Key=self.key)
         self._upload_id = resp['UploadId']
-        return self
 
-    async def write(self, data: bytes, part_num: Optional[int] = None) -> None:
-        if part_num is None:
-            part_num = self._part_num = self._part_num + 1
-        elif 1 <= part_num <= 10000:
-            self._part_num += 1
-        else:
-            raise ValueError('part_num must be an integer between 1 and 1000')
-        resp = await self.client.upload_part(Bucket=self.bucket, Body=data,
-                                             UploadId=self._upload_id, PartNumber=part_num, Key=self.key)
-        self._part_info['Parts'].append(
-            {
-                'PartNumber': part_num,
-                'ETag': resp['ETag']
-            }
-        )
-
-    async def close(self) -> None:
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         resp = await self.client.list_parts(
             Bucket=self.bucket,
             Key=self.key,
@@ -161,3 +133,87 @@ class AsyncMultipartWriter:
             )
             raise RuntimeError(f'Write aborted!\n'
                                f'{self._part_num} parts transmitted, {len(uploaded_parts)} received, {loss}% loss')
+
+    async def write(self, data: bytes, part_num: Optional[int] = None) -> None:
+        if part_num is None:
+            part_num = self._part_num = self._part_num + 1
+        elif 1 <= part_num <= 10000:
+            self._part_num += 1
+        else:
+            raise ValueError('part_num must be an integer between 1 and 1000')
+        resp = await self.client.upload_part(Bucket=self.bucket, Body=data,
+                                             UploadId=self._upload_id, PartNumber=part_num, Key=self.key)
+        self._part_info['Parts'].append(
+            {
+                'PartNumber': part_num,
+                'ETag': resp['ETag']
+            }
+        )
+
+
+class SinglepartWriter(AbstractContextManager[Any]):
+    """Singlepart S3 writer.
+
+    Attributes
+    ----------
+    client : Any
+        Boto3 S3 client.
+    bucket : str
+        S3 bucket.
+    key : str
+        S3 file key.
+    """
+
+    def __init__(
+        self,
+        client: Any,
+        bucket: str,
+        key: str
+    ):
+        self.client = client
+        self.bucket = bucket
+        self.key = key
+
+    def __enter__(self) -> None:
+        self.file = tempfile.NamedTemporaryFile()
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self.file.seek(0)
+        self.client.put_object(Body=self.file.read(), Bucket=self.bucket, Key=self.key)
+
+    def write(self, data: bytes) -> None:
+        self.file.write(data)
+
+
+class AsyncSinglepartWriter(AbstractAsyncContextManager[Any]):
+    """Async singlepart S3 writer.
+
+    Attributes
+    ----------
+    client : Any
+        Boto3 S3 client.
+    bucket : str
+        S3 bucket.
+    key : str
+        S3 file key.
+    """
+
+    def __init__(
+        self,
+        client: Any,
+        bucket: str,
+        key: str
+    ):
+        self.client = client
+        self.bucket = bucket
+        self.key = key
+
+    async def __aenter__(self) -> None:
+        self.file = await aiofiles.tempfile.NamedTemporaryFile()
+
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        await self.file.seek(0)
+        await self.client.put_object(Body=await self.file.read(), Bucket=self.bucket, Key=self.key)
+
+    async def write(self, data: bytes) -> None:
+        await self.file.write(data)

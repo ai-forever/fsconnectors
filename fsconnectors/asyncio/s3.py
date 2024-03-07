@@ -1,14 +1,12 @@
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, AsyncIterator, List, Union
+from typing import Any, AsyncGenerator, List, Union
 
 import aioboto3
-import aiofiles.tempfile
 import yaml
-from aiofiles.base import AiofilesContextManager
 
 from fsconnectors.asyncio.connector import AsyncConnector
 from fsconnectors.utils.entry import FSEntry
-from fsconnectors.utils.multipart import AsyncMultipartWriter
+from fsconnectors.utils.multipart import AsyncMultipartWriter, AsyncSinglepartWriter
 
 
 class AsyncS3Connector(AsyncConnector):
@@ -70,8 +68,12 @@ class AsyncS3Connector(AsyncConnector):
             config = yaml.safe_load(f)
         return cls(**config)
 
-    @asynccontextmanager
-    async def open(self, path: str, mode: str = 'rb', multipart: bool = False) -> AsyncIterator[Union[AiofilesContextManager, AsyncMultipartWriter]]:
+    async def open(
+        self,
+        path: str,
+        mode: str = 'rb',
+        multipart: bool = False
+    ) -> Union[Any, AsyncMultipartWriter, AsyncSinglepartWriter]:
         """Open file
 
         Parameters
@@ -92,20 +94,14 @@ class AsyncS3Connector(AsyncConnector):
         if mode == 'rb':
             obj = await self.client.get_object(Bucket=bucket, Key=key)
             stream = obj['Body']
-            yield stream
-            stream.close()
         elif mode == 'wb':
             if multipart:
-                stream = AsyncMultipartWriter.open(self.client, Bucket=bucket, Key=key)
-                yield stream
-                await stream.close()
+                stream = AsyncMultipartWriter(self.client, bucket=bucket, key=key)
             else:
-                async with aiofiles.tempfile.TemporaryFile() as stream:
-                    yield stream
-                    await stream.seek(0)
-                    await self.client.put_object(Body=await stream.read(), Bucket=bucket, Key=key)
+                stream = AsyncSinglepartWriter(self.client, bucket=bucket, key=key)
         else:
             raise ValueError(f"invalid mode: '{mode}'")
+        return stream
 
     async def mkdir(self, path: str) -> None:
         path = path.rstrip('/') + '/'

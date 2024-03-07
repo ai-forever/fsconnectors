@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
-from typing import Any, List
+from typing import Any, ContextManager, List
 
 from fsconnectors.utils.entry import FSEntry
 
@@ -9,8 +8,7 @@ class Connector(ABC):
     """Abstract class for connector."""
 
     @abstractmethod
-    @contextmanager
-    def open(self, path: str, mode: str) -> Any:
+    def open(self, path: str, mode: str) -> ContextManager[Any]:
         """Open file.
 
         Parameters

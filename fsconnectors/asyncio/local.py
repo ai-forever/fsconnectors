@@ -1,6 +1,5 @@
 import datetime
 import os
-from contextlib import asynccontextmanager
 from typing import List
 
 import aiofiles
@@ -15,10 +14,8 @@ from fsconnectors.utils.entry import FSEntry
 class AsyncLocalConnector(AsyncConnector):
     """Async local file system connector."""
 
-    @asynccontextmanager
     async def open(self, path: str, mode: str = 'r') -> AiofilesContextManager:
-        async with aiofiles.open(path, mode) as f:
-            yield f
+        return aiofiles.open(path, mode)
 
     async def mkdir(self, path: str) -> None:
         await aiofiles.os.makedirs(path, exist_ok=True)

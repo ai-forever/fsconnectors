@@ -1,13 +1,11 @@
-import tempfile
-from contextlib import contextmanager
-from typing import Any, List
+from typing import Any, List, Union
 
 import boto3
 import yaml
 
 from fsconnectors.connector import Connector
 from fsconnectors.utils.entry import FSEntry
-from fsconnectors.utils.multipart import MultipartWriter
+from fsconnectors.utils.multipart import MultipartWriter, SinglepartWriter
 
 
 class S3Connector(Connector):
@@ -51,8 +49,12 @@ class S3Connector(Connector):
             config = yaml.safe_load(f)
         return cls(**config)
 
-    @contextmanager
-    def open(self, path: str, mode: str = 'rb', multipart: bool = False) -> Any:
+    def open(
+        self,
+        path: str,
+        mode: str = 'rb',
+        multipart: bool = False
+    ) -> Union[Any, MultipartWriter, SinglepartWriter]:
         """Open file.
 
         Parameters
@@ -69,31 +71,19 @@ class S3Connector(Connector):
         Any
             Readable/writable file-like object.
         """
-        try:
-            client = self._get_client()
-            bucket, key = self._split_path(path)
-            if mode == 'rb':
-                obj = client.get_object(Bucket=bucket, Key=key)
-                stream = obj['Body']
-            elif mode == 'wb':
-                if multipart:
-                    stream = MultipartWriter.open(client, Bucket=bucket, Key=key)
-                else:
-                    stream = tempfile.TemporaryFile()
+        client = self._get_client()
+        bucket, key = self._split_path(path)
+        if mode == 'rb':
+            obj = client.get_object(Bucket=bucket, Key=key)
+            stream = obj['Body']
+        elif mode == 'wb':
+            if multipart:
+                stream = MultipartWriter(client, bucket=bucket, key=key)
             else:
-                raise ValueError(f"invalid mode: '{mode}'")
-            yield stream
-        finally:
-            if mode == 'rb':
-                stream.close()
-            elif mode == 'wb':
-                if multipart:
-                    stream.close()
-                else:
-                    stream.seek(0)
-                    client.put_object(Body=stream.read(), Bucket=bucket, Key=key)
-                    stream.close()
-            client.close()
+                stream = SinglepartWriter(client, bucket=bucket, key=key)
+        else:
+            raise ValueError(f"invalid mode: '{mode}'")
+        return stream
 
     def mkdir(self, path: str) -> None:
         client = self._get_client()

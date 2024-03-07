@@ -1,8 +1,7 @@
 import datetime
 import os
 import shutil
-from contextlib import contextmanager
-from typing import Any, List
+from typing import IO, Any, List
 
 from fsconnectors.connector import Connector
 from fsconnectors.utils.entry import FSEntry
@@ -11,10 +10,8 @@ from fsconnectors.utils.entry import FSEntry
 class LocalConnector(Connector):
     """Local file system connector."""
 
-    @contextmanager
-    def open(self, path: str, mode: str = 'r') -> Any:
-        with open(path, mode) as f:
-            yield f
+    def open(self, path: str, mode: str = 'r') -> IO[Any]:
+        return open(path, mode)
 
     def mkdir(self, path: str) -> None:
         os.makedirs(path, exist_ok=True)
