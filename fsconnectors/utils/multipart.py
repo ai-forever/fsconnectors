@@ -1,17 +1,23 @@
-from typing import Optional, Any
+from typing import Optional, Any, Dict
 
 
 class MultipartWriter:
     """Multipart S3 writer.
 
-        Attributes
-        ----------
-        client : Any
-            Boto3 S3 client.
-        bucket : str
-            S3 bucket.
-        key : str
-            S3 file key.
+    Attributes
+    ----------
+    client : Any
+        Boto3 S3 client.
+    bucket : str
+        S3 bucket.
+    key : str
+        S3 file key.
+    _upload_id : str
+        Upload ID.
+    _part_num : int
+        Part number.
+    _part_info : Dict[Any, Any]
+        Parts info.
         """
 
     def __init__(
@@ -93,6 +99,12 @@ class AsyncMultipartWriter:
         S3 bucket.
     key : str
         S3 file key.
+    _upload_id : str
+        Upload ID.
+    _part_num : int
+        Part number.
+    _part_info : Dict[Any, Any]
+        Parts info.
     """
 
     def __init__(
