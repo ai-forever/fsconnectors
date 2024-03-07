@@ -20,7 +20,7 @@ class AsyncConnector(ABC):
         yield self
 
     @abstractmethod
-    async def open(self, path: str, mode: str) -> AsyncContextManager[Any]:
+    def open(self, path: str, mode: str) -> AsyncContextManager[Any]:
         pass
 
     @abstractmethod

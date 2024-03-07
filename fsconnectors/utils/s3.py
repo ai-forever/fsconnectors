@@ -2,7 +2,7 @@ import tempfile
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from typing import Any, Dict, Optional
 
-import aiofiles.tempfile
+import asynctempfile
 
 
 class MultipartWriter(AbstractContextManager[Any]):
@@ -31,9 +31,10 @@ class MultipartWriter(AbstractContextManager[Any]):
         self._part_num = 0
         self._part_info: Dict[Any, Any] = {'Parts': []}
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> 'MultipartWriter':
         resp = self.client.create_multipart_upload(Bucket=self.bucket, Key=self.key)
         self._upload_id = resp['UploadId']
+        return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         resp = self.client.list_parts(
@@ -104,9 +105,10 @@ class AsyncMultipartWriter(AbstractAsyncContextManager[Any]):
         self._part_num: int = 0
         self._part_info: Dict[Any, Any] = {'Parts': []}
 
-    async def __aenter__(self) -> None:
+    async def __aenter__(self) -> 'AsyncMultipartWriter':
         resp = await self.client.create_multipart_upload(Bucket=self.bucket, Key=self.key)
         self._upload_id = resp['UploadId']
+        return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         resp = await self.client.list_parts(
@@ -174,8 +176,9 @@ class SinglepartWriter(AbstractContextManager[Any]):
         self.bucket = bucket
         self.key = key
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> 'SinglepartWriter':
         self.file = tempfile.NamedTemporaryFile()
+        return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.file.seek(0)
@@ -208,8 +211,9 @@ class AsyncSinglepartWriter(AbstractAsyncContextManager[Any]):
         self.bucket = bucket
         self.key = key
 
-    async def __aenter__(self) -> None:
-        self.file = await aiofiles.tempfile.NamedTemporaryFile()
+    async def __aenter__(self) -> 'AsyncSinglepartWriter':
+        self.file = await asynctempfile.TemporaryFile()
+        return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         await self.file.seek(0)
@@ -217,3 +221,73 @@ class AsyncSinglepartWriter(AbstractAsyncContextManager[Any]):
 
     async def write(self, data: bytes) -> None:
         await self.file.write(data)
+
+
+class S3Reader(AbstractContextManager[Any]):
+    """S3 stream reader.
+
+    Attributes
+    ----------
+    client : Any
+        Boto3 S3 client.
+    bucket : str
+        S3 bucket.
+    key : str
+        S3 file key.
+    """
+
+    def __init__(
+        self,
+        client: Any,
+        bucket: str,
+        key: str
+    ):
+        self.client = client
+        self.bucket = bucket
+        self.key = key
+
+    def __enter__(self) -> 'S3Reader':
+        obj = self.client.get_object(Bucket=self.bucket, Key=self.key)
+        self.stream = obj['Body']
+        return self
+
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self.stream.close()
+
+    def read(self, chunk: Optional[int] = None) -> Any:
+        return self.stream.read(chunk)
+
+
+class AsyncS3Reader(AbstractAsyncContextManager[Any]):
+    """Async S3 stream reader.
+
+    Attributes
+    ----------
+    client : Any
+        Boto3 S3 client.
+    bucket : str
+        S3 bucket.
+    key : str
+        S3 file key.
+    """
+
+    def __init__(
+        self,
+        client: Any,
+        bucket: str,
+        key: str
+    ):
+        self.client = client
+        self.bucket = bucket
+        self.key = key
+
+    async def __aenter__(self) -> 'AsyncS3Reader':
+        obj = await self.client.get_object(Bucket=self.bucket, Key=self.key)
+        self.stream = obj['Body']
+        return self
+
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        self.stream.close()
+
+    async def read(self, chunk: Optional[int] = None) -> Any:
+        return await self.stream.read(chunk)

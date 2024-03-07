@@ -14,7 +14,7 @@ from fsconnectors.utils.entry import FSEntry
 class AsyncLocalConnector(AsyncConnector):
     """Async local file system connector."""
 
-    async def open(self, path: str, mode: str = 'r') -> AiofilesContextManager:
+    def open(self, path: str, mode: str = 'r') -> AiofilesContextManager:
         return aiofiles.open(path, mode)
 
     async def mkdir(self, path: str) -> None:

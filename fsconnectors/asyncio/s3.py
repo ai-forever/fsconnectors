@@ -6,7 +6,11 @@ import yaml
 
 from fsconnectors.asyncio.connector import AsyncConnector
 from fsconnectors.utils.entry import FSEntry
-from fsconnectors.utils.multipart import AsyncMultipartWriter, AsyncSinglepartWriter
+from fsconnectors.utils.s3 import (
+    AsyncMultipartWriter,
+    AsyncS3Reader,
+    AsyncSinglepartWriter,
+)
 
 
 class AsyncS3Connector(AsyncConnector):
@@ -68,12 +72,12 @@ class AsyncS3Connector(AsyncConnector):
             config = yaml.safe_load(f)
         return cls(**config)
 
-    async def open(
+    def open(
         self,
         path: str,
         mode: str = 'rb',
         multipart: bool = False
-    ) -> Union[Any, AsyncMultipartWriter, AsyncSinglepartWriter]:
+    ) -> Union[AsyncS3Reader, AsyncMultipartWriter, AsyncSinglepartWriter]:
         """Open file
 
         Parameters
@@ -87,13 +91,13 @@ class AsyncS3Connector(AsyncConnector):
 
         Returns
         -------
-        Any
+        Union[AsyncS3Reader, AsyncMultipartWriter, AsyncSinglepartWriter]
             Readable/writable file-like object.
         """
+        stream: Union[AsyncS3Reader, AsyncMultipartWriter, AsyncSinglepartWriter]
         bucket, key = self._split_path(path)
         if mode == 'rb':
-            obj = await self.client.get_object(Bucket=bucket, Key=key)
-            stream = obj['Body']
+            stream = AsyncS3Reader(self.client, bucket=bucket, key=key)
         elif mode == 'wb':
             if multipart:
                 stream = AsyncMultipartWriter(self.client, bucket=bucket, key=key)

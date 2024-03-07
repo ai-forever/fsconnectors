@@ -5,7 +5,7 @@ import yaml
 
 from fsconnectors.connector import Connector
 from fsconnectors.utils.entry import FSEntry
-from fsconnectors.utils.multipart import MultipartWriter, SinglepartWriter
+from fsconnectors.utils.s3 import MultipartWriter, S3Reader, SinglepartWriter
 
 
 class S3Connector(Connector):
@@ -54,7 +54,7 @@ class S3Connector(Connector):
         path: str,
         mode: str = 'rb',
         multipart: bool = False
-    ) -> Union[Any, MultipartWriter, SinglepartWriter]:
+    ) -> Union[S3Reader, MultipartWriter, SinglepartWriter]:
         """Open file.
 
         Parameters
@@ -68,14 +68,14 @@ class S3Connector(Connector):
 
         Returns
         -------
-        Any
+        Union[S3Reader, MultipartWriter, SinglepartWriter]
             Readable/writable file-like object.
         """
+        stream: Union[S3Reader, MultipartWriter, SinglepartWriter]
         client = self._get_client()
         bucket, key = self._split_path(path)
         if mode == 'rb':
-            obj = client.get_object(Bucket=bucket, Key=key)
-            stream = obj['Body']
+            stream = S3Reader(client, bucket=bucket, key=key)
         elif mode == 'wb':
             if multipart:
                 stream = MultipartWriter(client, bucket=bucket, key=key)
