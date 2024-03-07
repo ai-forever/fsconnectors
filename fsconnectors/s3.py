@@ -1,8 +1,8 @@
 import yaml
 import boto3
 import tempfile
+from typing import List, Any
 from contextlib import contextmanager
-from typing import List, Any, Literal
 
 from fsconnectors.connector import Connector
 from fsconnectors.utils.entry import FSEntry
@@ -17,9 +17,9 @@ class S3Connector(Connector):
     endpoint_url : str
         Endpoint URL.
     aws_access_key_id : str
-        AWS access key ID
+        AWS access key ID.
     aws_secret_access_key : str
-        AWS secret access key
+        AWS secret access key.
     """
 
     def __init__(
@@ -44,14 +44,14 @@ class S3Connector(Connector):
         Returns
         -------
         S3Connector
-            Class instance
+            Class instance.
         """
         with open(path) as f:
             config = yaml.safe_load(f)
         return cls(**config)
 
     @contextmanager
-    def open(self, path: str, mode: Literal['rb', 'wb'] = 'rb', multipart: bool = False) -> Any:
+    def open(self, path: str, mode: str = 'rb', multipart: bool = False) -> Any:
         """Open file.
 
         Parameters
@@ -76,7 +76,7 @@ class S3Connector(Connector):
                 stream = obj['Body']
             elif mode == 'wb':
                 if multipart:
-                    stream = MultipartWriter.open(self.client, Bucket=bucket, Key=key)
+                    stream = MultipartWriter.open(client, Bucket=bucket, Key=key)
                 else:
                     stream = tempfile.TemporaryFile()
             else:
@@ -90,7 +90,7 @@ class S3Connector(Connector):
                     stream.close()
                 else:
                     stream.seek(0)
-                    self.client.put_object(Body=stream.read(), Bucket=bucket, Key=key)
+                    client.put_object(Body=stream.read(), Bucket=bucket, Key=key)
                     stream.close()
             client.close()
 
