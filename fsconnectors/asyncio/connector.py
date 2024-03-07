@@ -11,7 +11,7 @@ class AsyncConnector(ABC):
     @classmethod
     @abstractmethod
     @asynccontextmanager
-    async def connect(cls) -> 'AsyncConnector':
+    async def connect(cls, *args, **kwargs) -> 'AsyncConnector':
         """Connects to file system.
 
         Yields

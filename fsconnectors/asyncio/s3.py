@@ -58,7 +58,7 @@ class AsyncS3Connector(AsyncConnector):
         Yields
         -------
         AsyncS3Connector
-            Class instance
+            Class instance.
         """
         with open(path) as f:
             config = yaml.safe_load(f)
@@ -80,8 +80,8 @@ class AsyncS3Connector(AsyncConnector):
 
         Returns
         -------
-        IO
-            File-like object.
+        Any
+            Readable/writable file-like object.
         """
         bucket, key = self._split_path(path)
         if mode == 'rb':

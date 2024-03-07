@@ -71,7 +71,8 @@ class AsyncLocalConnector(AsyncConnector):
                     result.append(os.path.join(root, name))
             return result
         else:
-            return await aiofiles.os.listdir(path)
+            result = await aiofiles.os.listdir(path)
+            return result
 
     async def scandir(self, path: str, recursive: bool = False) -> List[FSEntry]:
         result = []
