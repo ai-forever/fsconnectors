@@ -48,12 +48,12 @@ import asyncio
 from fsconnectors import AsyncLocalConnector, AsyncS3Connector
 
 async def foo():
-    async with AsyncLocalConnector.connect() as lc:
-        async with AsyncS3Connector.connect(  # or use from_yaml method
+    async with AsyncLocalConnector().connect() as lc:
+        async with AsyncS3Connector(  # or use from_yaml method
                 endpoint_url='endpoint_url',
                 aws_access_key_id='aws_access_key_id',
                 aws_secret_access_key='aws_secret_access_key'
-        ) as sc:
+        ).connect() as sc:
             async with lc.open('./file.txt', 'rb') as lf:
                 async with sc.open('bucket/file.txt', 'wb') as sf:
                     await sf.write(await lf.read())

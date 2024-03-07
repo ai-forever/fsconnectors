@@ -8,10 +8,8 @@ from fsconnectors.utils.entry import FSEntry
 class AsyncConnector(ABC):
     """Abstract class for async connector."""
 
-    @classmethod
-    @abstractmethod
     @asynccontextmanager
-    async def connect(cls, *args: Tuple[Tuple[Any], ...], **kwargs: Dict[str, Any]) -> AsyncGenerator[Any, None]:
+    async def connect(self) -> AsyncGenerator[Any, None]:
         """Connects to file system.
 
         Yields
@@ -19,7 +17,7 @@ class AsyncConnector(ABC):
         AsyncConnector
             Class instance
         """
-        pass
+        yield self
 
     @abstractmethod
     @asynccontextmanager

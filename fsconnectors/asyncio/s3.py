@@ -10,40 +10,42 @@ from fsconnectors.asyncio.connector import AsyncConnector
 
 
 class AsyncS3Connector(AsyncConnector):
-    """Async S3 connector."""
+    """Async S3 connector.
 
-    def __init__(self):
-        self.client: Any = None
+    Attributes
+    ----------
+    endpoint_url : str
+        Endpoint URL.
+    aws_access_key_id : str
+        AWS access key ID
+    aws_secret_access_key : str
+        AWS secret access key
+    """
 
-    @classmethod
-    @asynccontextmanager
-    async def connect(
-        cls,
+    def __init__(
+        self,
         endpoint_url: str,
         aws_access_key_id: str,
         aws_secret_access_key: str
-    ) -> AsyncGenerator['AsyncS3Connector', None]:
-        """Connects to file system.
+    ) -> None:
+        self.endpoint_url = endpoint_url
+        self.aws_access_key_id = aws_access_key_id
+        self.aws_secret_access_key = aws_secret_access_key
+        self.client: Any = None
 
-        Parameters
-        ----------
-        endpoint_url : str
-            Endpoint URL.
-        aws_access_key_id : str
-            AWS access key ID
-        aws_secret_access_key : str
-            AWS secret access key
+    @asynccontextmanager
+    async def connect(self) -> AsyncGenerator['AsyncS3Connector', None]:
+        """Connects to file system.
 
         Yields
         -------
         AsyncS3Connector
             Class instance
         """
-        self = cls()
         async with aioboto3.Session().client(
-                's3', endpoint_url=endpoint_url,
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key
+                's3', endpoint_url=self.endpoint_url,
+                aws_access_key_id=self.aws_access_key_id,
+                aws_secret_access_key=self.aws_secret_access_key
         ) as client:
             self.client = client
             yield self

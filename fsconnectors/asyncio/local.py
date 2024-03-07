@@ -13,18 +13,6 @@ from fsconnectors.asyncio.connector import AsyncConnector
 class AsyncLocalConnector(AsyncConnector):
     """Async local file system connector."""
 
-    @classmethod
-    @asynccontextmanager
-    async def connect(cls) -> AsyncGenerator['AsyncLocalConnector', None]:
-        """Connects to file system.
-
-        Yields
-        -------
-        AsyncLocalConnector
-            Class instance
-        """
-        yield cls()
-
     @asynccontextmanager
     async def open(self, path: str, mode: str = 'r') -> Any:
         async with aiofiles.open(path, mode) as f:
