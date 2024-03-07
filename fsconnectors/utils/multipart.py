@@ -25,7 +25,7 @@ class MultipartWriter:
         self.key = key
         self._upload_id = ''
         self._part_num = 0
-        self._part_info: Dict[Any, Any] = dict(Parts=[])
+        self._part_info: Dict[Any, Any] = {'Parts': []}
 
     @classmethod
     def open(
@@ -106,7 +106,7 @@ class AsyncMultipartWriter:
         self.key = key
         self._upload_id = ''
         self._part_num = 0
-        self._part_info: Dict[Any, Any] = dict(Parts=[])
+        self._part_info: Dict[Any, Any] = {'Parts': []}
 
     @classmethod
     async def open(

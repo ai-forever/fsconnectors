@@ -119,11 +119,12 @@ class AsyncS3Connector(AsyncConnector):
             paths = await self.listdir(src_path, recursive)
             for path in paths:
                 path_bucket, path_key = self._split_path(path)
-                await self.client.copy(dict(Bucket=path_bucket, Key=path_key), dst_bucket, path_key.replace(src_key, dst_key))
+                await self.client.copy({'Bucket': path_bucket, 'Key': path_key},
+                                       dst_bucket, path_key.replace(src_key, dst_key))
         else:
             src_bucket, src_key = self._split_path(src_path)
             dst_bucket, dst_key = self._split_path(dst_path)
-            await self.client.copy(dict(Bucket=src_bucket, Key=src_key), dst_bucket, dst_key)
+            await self.client.copy({'Bucket': src_bucket, 'Key': src_key}, dst_bucket, dst_key)
 
     async def move(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         await self.copy(src_path, dst_path, recursive)
