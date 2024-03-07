@@ -3,8 +3,8 @@ import datetime
 import aiofiles
 import aioshutil
 import aiofiles.os
+from typing import List, Any
 from contextlib import asynccontextmanager
-from typing import List, Any, AsyncGenerator
 
 from fsconnectors.utils.entry import FSEntry
 from fsconnectors.asyncio.connector import AsyncConnector

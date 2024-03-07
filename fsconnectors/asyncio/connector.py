@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from contextlib import asynccontextmanager
-from typing import List, Any, AsyncGenerator, Dict, Tuple
+from typing import List, Any, AsyncGenerator
 
 from fsconnectors.utils.entry import FSEntry
 
