@@ -22,7 +22,7 @@ class AsyncConnector(ABC):
     @abstractmethod
     @asynccontextmanager
     async def open(self, path: str, mode: str) -> Any:
-        pass
+        yield None
 
     @abstractmethod
     async def mkdir(self, path: str) -> None:
