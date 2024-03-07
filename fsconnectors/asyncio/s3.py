@@ -12,6 +12,9 @@ from fsconnectors.asyncio.connector import AsyncConnector
 class AsyncS3Connector(AsyncConnector):
     """Async S3 connector."""
 
+    def __init__(self):
+        self.client: Any = None
+
     @classmethod
     @asynccontextmanager
     async def connect(
