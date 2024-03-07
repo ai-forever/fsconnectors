@@ -25,9 +25,7 @@ class MultipartWriter:
         self.key = key
         self._upload_id = ''
         self._part_num = 0
-        self._part_info = {
-            'Parts': []
-        }
+        self._part_info = dict(Parts=[])
 
     @classmethod
     def open(
@@ -41,7 +39,7 @@ class MultipartWriter:
         self._upload_id = resp['UploadId']
         return self
 
-    def write(self, data: bytes, part_num: Optional[int] = None):
+    def write(self, data: bytes, part_num: Optional[int] = None) -> None:
         if part_num is None:
             part_num = self._part_num = self._part_num + 1
         elif 1 <= part_num <= 10000:
@@ -57,7 +55,7 @@ class MultipartWriter:
             }
         )
 
-    def close(self):
+    def close(self) -> None:
         resp = self.client.list_parts(
             Bucket=self.bucket,
             Key=self.key,
@@ -108,9 +106,7 @@ class AsyncMultipartWriter:
         self.key = key
         self._upload_id = ''
         self._part_num = 0
-        self._part_info = {
-            'Parts': []
-        }
+        self._part_info = dict(Parts=[])
 
     @classmethod
     async def open(
@@ -124,7 +120,7 @@ class AsyncMultipartWriter:
         self._upload_id = resp['UploadId']
         return self
 
-    async def write(self, data: bytes, part_num: Optional[int] = None):
+    async def write(self, data: bytes, part_num: Optional[int] = None) -> None:
         if part_num is None:
             part_num = self._part_num = self._part_num + 1
         elif 1 <= part_num <= 10000:
@@ -140,7 +136,7 @@ class AsyncMultipartWriter:
             }
         )
 
-    async def close(self):
+    async def close(self) -> None:
         resp = await self.client.list_parts(
             Bucket=self.bucket,
             Key=self.key,
