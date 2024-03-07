@@ -1,7 +1,7 @@
 import os
 import shutil
 import datetime
-from typing import List, IO
+from typing import List, Any
 from contextlib import contextmanager
 
 from fsconnectors.connector import Connector
@@ -12,14 +12,14 @@ class LocalConnector(Connector):
     """Local file system connector."""
 
     @contextmanager
-    def open(self, path: str, mode: str = 'r') -> IO:
+    def open(self, path: str, mode: str = 'r') -> Any:
         with open(path, mode) as f:
             yield f
 
-    def mkdir(self, path: str):
+    def mkdir(self, path: str) -> None:
         os.makedirs(path, exist_ok=True)
 
-    def copy(self, src_path: str, dst_path: str, recursive: bool = False):
+    def copy(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         if not os.path.exists(src_path):
             raise FileNotFoundError(f"No such file or directory: '{src_path}'")
         elif os.path.isdir(src_path) and recursive:
@@ -29,7 +29,7 @@ class LocalConnector(Connector):
         else:
             raise ValueError(f"'{src_path}' is a directory, but recursive mode is disabled")
 
-    def move(self, src_path: str, dst_path: str, recursive: bool = False):
+    def move(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         if not os.path.exists(src_path):
             raise FileNotFoundError(f"No such file or directory: '{src_path}'")
         elif (os.path.isdir(src_path) and recursive) or os.path.isfile(src_path):
@@ -37,7 +37,7 @@ class LocalConnector(Connector):
         else:
             raise ValueError(f"'{src_path}' is a directory, but recursive mode is disabled")
 
-    def remove(self, path: str, recursive: bool = False):
+    def remove(self, path: str, recursive: bool = False) -> None:
         if not os.path.exists(path):
             raise FileNotFoundError(f"No such file or directory: '{path}'")
         elif os.path.isdir(path) and recursive:
