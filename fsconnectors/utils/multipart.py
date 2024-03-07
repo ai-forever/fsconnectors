@@ -16,14 +16,18 @@ class MultipartWriter:
 
     def __init__(
         self,
-        client: Any
+        client: Any,
+        bucket: str,
+        key: str
     ):
         self.client = client
-        self.bucket = None
-        self.key = None
-        self._upload_id = None
-        self._part_num = None
-        self._part_info = None
+        self.bucket = bucket
+        self.key = key
+        self._upload_id = ''
+        self._part_num = 0
+        self._part_info = {
+            'Parts': []
+        }
 
     @classmethod
     def open(
@@ -32,15 +36,9 @@ class MultipartWriter:
         Bucket: str,
         Key: str
     ) -> 'MultipartWriter':
-        self = cls(client)
-        self.bucket = Bucket
-        self.key = Key
-        self._part_num = 0
+        self = cls(client, Bucket, Key)
         resp = self.client.create_multipart_upload(Bucket=self.bucket, Key=self.key)
         self._upload_id = resp['UploadId']
-        self._part_info = {
-            'Parts': []
-        }
         return self
 
     def write(self, data: bytes, part_num: Optional[int] = None):
@@ -101,14 +99,18 @@ class AsyncMultipartWriter:
 
     def __init__(
         self,
-        client: Any
+        client: Any,
+        bucket: str,
+        key: str
     ):
         self.client = client
-        self.bucket = None
-        self.key = None
-        self._upload_id = None
-        self._part_num = None
-        self._part_info = None
+        self.bucket = bucket
+        self.key = key
+        self._upload_id = ''
+        self._part_num = 0
+        self._part_info = {
+            'Parts': []
+        }
 
     @classmethod
     async def open(
@@ -117,16 +119,9 @@ class AsyncMultipartWriter:
         Bucket: str,
         Key: str
     ) -> 'AsyncMultipartWriter':
-        self = cls(client)
-        self.client = client
-        self.bucket = Bucket
-        self.key = Key
-        self._part_num = 0
+        self = cls(client, Bucket, Key)
         resp = await self.client.create_multipart_upload(Bucket=self.bucket, Key=self.key)
         self._upload_id = resp['UploadId']
-        self._part_info = {
-            'Parts': []
-        }
         return self
 
     async def write(self, data: bytes, part_num: Optional[int] = None):
