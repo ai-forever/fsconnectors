@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
-from typing import Any, AsyncContextManager
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from typing import Any
 
 from fsconnectors.utils.entry import FSEntry
 
@@ -21,7 +21,7 @@ class AsyncConnector(ABC):
         yield self
 
     @abstractmethod
-    def open(self, path: str, mode: str) -> AsyncContextManager[Any]:
+    def open(self, path: str, mode: str) -> AbstractAsyncContextManager[Any]:
         pass
 
     @abstractmethod
