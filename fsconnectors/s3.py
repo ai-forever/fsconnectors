@@ -1,4 +1,4 @@
-from typing import Any, List, Union
+from typing import Any, Union
 
 import boto3
 import yaml
@@ -126,7 +126,7 @@ class S3Connector(Connector):
             client.delete_object(Bucket=bucket, Key=key)
         client.close()
 
-    def listdir(self, path: str, recursive: bool = False) -> List[str]:
+    def listdir(self, path: str, recursive: bool = False) -> list[str]:
         entries = self.scandir(path, recursive)
         if recursive:
             result = [entry.path for entry in entries]
@@ -134,7 +134,7 @@ class S3Connector(Connector):
             result = [entry.name for entry in entries]
         return result
 
-    def scandir(self, path: str, recursive: bool = False) -> List[FSEntry]:
+    def scandir(self, path: str, recursive: bool = False) -> list[FSEntry]:
         client = self._get_client()
         result = []
         path = path.rstrip('/') + '/'
@@ -163,7 +163,7 @@ class S3Connector(Connector):
         return result
 
     def _get_client(self) -> Any:
-        client = boto3.client(
+        client = boto3.session.Session().client(
             's3',
             endpoint_url=self.endpoint_url,
             aws_access_key_id=self.aws_access_key_id,
@@ -172,6 +172,6 @@ class S3Connector(Connector):
         return client
 
     @staticmethod
-    def _split_path(path: str) -> List[str]:
+    def _split_path(path: str) -> list[str]:
         path = path.split('://')[-1]
         return path.split('/', maxsplit=1)

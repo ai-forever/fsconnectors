@@ -1,5 +1,6 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, List, Union
+from typing import Any, Union
 
 import aioboto3
 import yaml
@@ -143,7 +144,7 @@ class AsyncS3Connector(AsyncConnector):
             bucket, key = self._split_path(path)
             await self.client.delete_object(Bucket=bucket, Key=key)
 
-    async def listdir(self, path: str, recursive: bool = False) -> List[str]:
+    async def listdir(self, path: str, recursive: bool = False) -> list[str]:
         entries = await self.scandir(path, recursive)
         if recursive:
             result = [entry.path for entry in entries]
@@ -151,7 +152,7 @@ class AsyncS3Connector(AsyncConnector):
             result = [entry.name for entry in entries]
         return result
 
-    async def scandir(self, path: str, recursive: bool = False) -> List[FSEntry]:
+    async def scandir(self, path: str, recursive: bool = False) -> list[FSEntry]:
         result = []
         path = path.rstrip('/') + '/'
         bucket, prefix = self._split_path(path)
@@ -178,6 +179,6 @@ class AsyncS3Connector(AsyncConnector):
         return result
 
     @staticmethod
-    def _split_path(path: str) -> List[str]:
+    def _split_path(path: str) -> list[str]:
         path = path.split('://')[-1]
         return path.split('/', maxsplit=1)

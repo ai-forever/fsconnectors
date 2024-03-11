@@ -1,7 +1,7 @@
 import datetime
 import os
 import shutil
-from typing import IO, Any, List
+from typing import IO, Any
 
 from fsconnectors.connector import Connector
 from fsconnectors.utils.entry import FSEntry
@@ -44,7 +44,7 @@ class LocalConnector(Connector):
         else:
             raise ValueError(f"'{path}' is a directory, but recursive mode is disabled")
 
-    def listdir(self, path: str, recursive: bool = False) -> List[str]:
+    def listdir(self, path: str, recursive: bool = False) -> list[str]:
         if recursive:
             result = []
             for root, dirs, files in os.walk(path):
@@ -56,7 +56,7 @@ class LocalConnector(Connector):
         else:
             return os.listdir(path)
 
-    def scandir(self, path: str, recursive: bool = False) -> List[FSEntry]:
+    def scandir(self, path: str, recursive: bool = False) -> list[FSEntry]:
         result = []
         if recursive:
             for root, dirs, files in os.walk(path):

@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any, AsyncContextManager, AsyncGenerator, List
+from typing import Any, AsyncContextManager
 
 from fsconnectors.utils.entry import FSEntry
 
@@ -40,9 +41,9 @@ class AsyncConnector(ABC):
         pass
 
     @abstractmethod
-    async def listdir(self, path: str, recursive: bool = False) -> List[str]:
+    async def listdir(self, path: str, recursive: bool = False) -> list[str]:
         pass
 
     @abstractmethod
-    async def scandir(self, path: str, recursive: bool = False) -> List[FSEntry]:
+    async def scandir(self, path: str, recursive: bool = False) -> list[FSEntry]:
         pass

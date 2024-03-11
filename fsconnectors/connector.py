@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, ContextManager, List
+from typing import Any, ContextManager
 
 from fsconnectors.utils.entry import FSEntry
 
@@ -80,7 +80,7 @@ class Connector(ABC):
         pass
 
     @abstractmethod
-    def listdir(self, path: str, recursive: bool = False) -> List[str]:
+    def listdir(self, path: str, recursive: bool = False) -> list[str]:
         """List directory content.
 
         Parameters
@@ -98,7 +98,7 @@ class Connector(ABC):
         pass
 
     @abstractmethod
-    def scandir(self, path: str, recursive: bool = False) -> List[FSEntry]:
+    def scandir(self, path: str, recursive: bool = False) -> list[FSEntry]:
         """List directory content with metadata.
 
         Parameters

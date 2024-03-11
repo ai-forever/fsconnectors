@@ -1,6 +1,5 @@
 import datetime
 import os
-from typing import List
 
 import aiofiles
 import aiofiles.os
@@ -48,7 +47,7 @@ class AsyncLocalConnector(AsyncConnector):
         else:
             raise ValueError(f"'{path}' is a directory, but recursive mode is disabled")
 
-    async def listdir(self, path: str, recursive: bool = False) -> List[str]:
+    async def listdir(self, path: str, recursive: bool = False) -> list[str]:
         if recursive:
             result = []
             for root, dirs, files in os.walk(path):  # TODO: async
@@ -61,7 +60,7 @@ class AsyncLocalConnector(AsyncConnector):
             result = await aiofiles.os.listdir(path)
             return result
 
-    async def scandir(self, path: str, recursive: bool = False) -> List[FSEntry]:
+    async def scandir(self, path: str, recursive: bool = False) -> list[FSEntry]:
         result = []
         if recursive:
             for root, dirs, files in os.walk(path):  # TODO: async

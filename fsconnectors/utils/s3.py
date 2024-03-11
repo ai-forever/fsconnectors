@@ -1,6 +1,6 @@
 import tempfile
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import asynctempfile
 
@@ -29,7 +29,7 @@ class MultipartWriter(AbstractContextManager[Any]):
         self.key = key
         self._upload_id = ''
         self._part_num = 0
-        self._part_info: Dict[Any, Any] = {'Parts': []}
+        self._part_info: dict[Any, Any] = {'Parts': []}
 
     def __enter__(self) -> 'MultipartWriter':
         resp = self.client.create_multipart_upload(Bucket=self.bucket, Key=self.key)
@@ -103,7 +103,7 @@ class AsyncMultipartWriter(AbstractAsyncContextManager[Any]):
         self.key = key
         self._upload_id = ''
         self._part_num: int = 0
-        self._part_info: Dict[Any, Any] = {'Parts': []}
+        self._part_info: dict[Any, Any] = {'Parts': []}
 
     async def __aenter__(self) -> 'AsyncMultipartWriter':
         resp = await self.client.create_multipart_upload(Bucket=self.bucket, Key=self.key)
