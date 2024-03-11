@@ -1,6 +1,0 @@
-PyYAML
-boto3
-aioboto3
-aiofiles
-aioshutil
-asynctempfile

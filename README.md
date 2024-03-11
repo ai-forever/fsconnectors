@@ -15,7 +15,7 @@ File system connectors.
 ```commandline
 git clone https://github.com/ai-forever/fsconnectors
 cd fsconnectors/
-pip install -r requirements.txt
+pip install .
 ```
 
 ## Usage

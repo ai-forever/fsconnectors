@@ -1,3 +1,27 @@
+[build-system]
+requires = [
+    "hatchling >= 1.13.0",
+    "wheel",
+    "Cython~=3.0.5"
+]
+build-backend = "hatchling.build"
+
+[project]
+name = 'fsconnectors'
+dynamic = [
+  'version'
+]
+readme = 'README.md'
+requires-python = '>=3.9'
+dependencies = [
+  "PyYAML",
+  "boto3",
+  "aioboto3",
+  "aiofiles",
+  "aioshutil",
+  "asynctempfile"
+]
+
 # mypy settings
 [tool.mypy]
 strict = true
