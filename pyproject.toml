@@ -22,6 +22,12 @@ dependencies = [
   "asynctempfile"
 ]
 
+[project.optional-dependencies]
+dev = ['pytest', 'mypy', 'ruff', 'isort']
+
+[tool.hatch.version]
+path = "fsconnectors/__init__.py"
+
 # mypy settings
 [tool.mypy]
 strict = true

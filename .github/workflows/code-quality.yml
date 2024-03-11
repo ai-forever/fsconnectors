@@ -10,8 +10,7 @@ jobs:
       with:
         python-version: "3.9"
     - run: pip install --upgrade pip
-    - run: pip install mypy ruff isort
-    - run: pip install -r requirements.txt
+    - run: pip install .[dev]
     - run: mypy fsconnectors/
     - run: ruff check fsconnectors/ --config pyproject.toml
     - run: isort --check fsconnectors/
