@@ -1,1 +1,5 @@
-from .s3utils import parse_config, S3Util
+from fsconnectors.asyncio import AsyncLocalConnector, AsyncS3Connector
+from fsconnectors.local import LocalConnector
+from fsconnectors.s3 import S3Connector
+
+__version__ = "1.0.0"

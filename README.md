@@ -1,75 +1,110 @@
 # fsconnectors
+File system connectors.
 
-Tool for async data transfer with S3.
-## Repository structure
-```
-fsconnectors
-├── config.yaml
-├── README.md
-├── requirements.txt
-├── setup.py
-└── fsconnectors
-    ├── __init__.py
-    ├── __main__.py
-    └── s3utils.py
-```
+## Contents
+* [Installation](#installation)
+* [Usage](#usage)
+  * [LocalConnector](#localconnector)
+  * [S3Connector](#s3connector)
+  * [Asyncio](#s3connector)
+* [API](#api)
+  * [Connector](#connector)
+  * [FSEntry](#fsentry)
+
 ## Installation
-```
-pip install git+https://github.com/ai-forever/fsconnectors
-```
-Or
-```
+```commandline
 git clone https://github.com/ai-forever/fsconnectors
-cd fsconnectors
+cd fsconnectors/
 pip install .
 ```
 
 ## Usage
 
-### Command Line
-Upload to S3:
+### LocalConnector
+```python
+from fsconnectors import LocalConnector
+
+lc = LocalConnector()
+with lc.open('./file.txt', 'w') as f:
+    f.write('Hello world!')
+entries = lc.listdir('.')
 ```
-python -m fsconnectors upload --s3_path s3://path --local_path local/path --config_path path/to/config.yaml
+
+### S3Connector
+```python
+from fsconnectors import S3Connector
+
+sc = S3Connector.from_yaml('path/to/config.yaml')
+with sc.open('bucket/file.txt', 'wb') as f:
+    f.write(b'Hello world!')
+entries = sc.listdir('bucket')
 ```
-Download from S3:
-```
-python -m fsconnectors download --s3_path s3://path --local_path local/path --config_path path/to/config.yaml
-```
-### Python Script
+
+### Asyncio
+> [!IMPORTANT]  
+> All async connectors should be used in async context manager with `connect` method
 ```python
 import asyncio
-from fsconnectors import S3Util
+from fsconnectors import AsyncLocalConnector, AsyncS3Connector
 
-s3util = S3Util(
-    endpoint_url='your_endpoint_url',
-    aws_access_key_id='your_aws_access_key_id',
-    aws_secret_access_key='your_aws_secret_access_key'
-)
+async def foo():
+    async with AsyncLocalConnector().connect() as lc:
+        async with AsyncS3Connector(  # or use from_yaml method
+                endpoint_url='endpoint_url',
+                aws_access_key_id='aws_access_key_id',
+                aws_secret_access_key='aws_secret_access_key'
+        ).connect() as sc:
+            async with lc.open('./file.txt', 'rb') as lf:
+                async with sc.open('bucket/file.txt', 'wb') as sf:
+                    await sf.write(await lf.read())
 
-# upload to S3
-error_files = asyncio.run(s3util.upload(s3_path='s3://path', local_path='local/path'))
-# download from S3
-error_files = asyncio.run(s3util.download(s3_path='s3://path', local_path='local/path'))
+asyncio.run(foo())
 ```
 
-### Jupyter Notebook
-```python
-from fsconnectors import S3Util, parse_config
+## API
 
-s3util = S3Util(**parse_config('path/to/config.yaml'))
-```
-```python
-# upload to S3
-error_files = await s3util.upload(s3_path='s3://path', local_path='local/path')
-```
-```python
-# download from S3
-error_files = await s3util.download(s3_path='s3://path', local_path='local/path')
-```
+### Connector
+* `open(path, mode)` - open file
+  * parameters:
+    * `path: str` - path to file
+    * `mode: str` - open mode (only 'rb' and 'wb' for S3 connectors)
+    * `multipart: bool = False` - use multipart writer (only for S3 connectors)
+  * returns:
+    * `Union[ContextManager, AsyncContextManager]` - file-like object
+* `mkdir(path)` - make directory
+  * parameters:
+    * `path: str` - directory path
+* `copy(src_path, dst_path, recursive)` - copy file or directory
+  * parameters:
+    * `src_path: str` - source path
+    * `dst_path: str` - destination path
+    * `recursive: bool = False` - recursive
+* `move(src_path, dst_path, recursive)` - move file or directory
+  * parameters:
+    * `src_path: str` - source path
+    * `dst_path: str` - destination path
+    * `recursive: bool = False` - recursive
+* `remove(path, recursive)` - delete file or directory
+  * parameters:
+    * `path: str` - path to file or directory
+    * `recursive: bool = False` - recursive
+* `listdir(path, recursive)` - list directory content
+  * parameters:
+    * `path: str` - directory path
+    * `recursive: bool = False` - recursive
+  * returns:
+    * `List[str]` - list of directory contents
+* `scandir(path, recursive)` - list directory content with metadata
+  * parameters:
+    * `path: str` - directory path
+    * `recursive: bool = False` - recursive
+  * returns:
+    * `List[FSEntry]` - list of directory contents with metadata
 
-## Configuration file structure
-```yaml
-endpoint_url: 'your_endpoint_url'
-aws_access_key_id: 'your_aws_access_key_id'
-aws_secret_access_key: 'your_aws_secret_access_key'
-```
+### FSEntry
+File system entry metadata
+* `name: str` - entry name
+* `path: str` - entry path
+* `type: Literal['file', 'dir']` - entry type
+* `size: Optional[int] = None` - entry size in bytes (only for files)
+* `last_modified: Optional[datetime.datetime] = None` - last modified (only for files)
