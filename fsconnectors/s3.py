@@ -74,13 +74,13 @@ class S3Connector(Connector):
         stream: Union[S3Reader, MultipartWriter, SinglepartWriter]
         client = self._get_client()
         bucket, key = self._split_path(path)
-        if mode == 'rb':
-            stream = S3Reader(client, bucket=bucket, key=key)
-        elif mode == 'wb':
+        if mode in ['r', 'rb', 'rt']:
+            stream = S3Reader(client, bucket=bucket, key=key, mode=mode)
+        elif mode == ['w', 'wb', 'wt']:
             if multipart:
-                stream = MultipartWriter(client, bucket=bucket, key=key)
+                stream = MultipartWriter(client, bucket=bucket, key=key, mode=mode)
             else:
-                stream = SinglepartWriter(client, bucket=bucket, key=key)
+                stream = SinglepartWriter(client, bucket=bucket, key=key, mode=mode)
         else:
             raise ValueError(f"invalid mode: '{mode}'")
         return stream

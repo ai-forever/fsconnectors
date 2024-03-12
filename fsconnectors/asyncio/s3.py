@@ -97,13 +97,13 @@ class AsyncS3Connector(AsyncConnector):
         """
         stream: Union[AsyncS3Reader, AsyncMultipartWriter, AsyncSinglepartWriter]
         bucket, key = self._split_path(path)
-        if mode == 'rb':
-            stream = AsyncS3Reader(self.client, bucket=bucket, key=key)
-        elif mode == 'wb':
+        if mode in ['r', 'rb', 'rt']:
+            stream = AsyncS3Reader(self.client, bucket=bucket, key=key, mode=mode)
+        elif mode in ['w', 'wb', 'wt']:
             if multipart:
-                stream = AsyncMultipartWriter(self.client, bucket=bucket, key=key)
+                stream = AsyncMultipartWriter(self.client, bucket=bucket, key=key, mode=mode)
             else:
-                stream = AsyncSinglepartWriter(self.client, bucket=bucket, key=key)
+                stream = AsyncSinglepartWriter(self.client, bucket=bucket, key=key, mode=mode)
         else:
             raise ValueError(f"invalid mode: '{mode}'")
         return stream
