@@ -67,7 +67,7 @@ class MultipartWriter(AbstractContextManager[Any]):
             raise RuntimeError(f'Write aborted!\n'
                                f'{self._part_num} parts transmitted, {len(uploaded_parts)} received, {loss}% loss')
 
-    def write(self, data: Union[str, bytes], part_num: Optional[int] = None) -> None:
+    def write(self, data: Any, part_num: Optional[int] = None) -> None:
         if ((self.mode == 'wb' and not isinstance(data, bytes))
                 or (self.mode in ['w', 'wt'] and not isinstance(data, str))):
             raise ValueError(f"invalid data type for mode '{self.mode}'")
@@ -151,7 +151,7 @@ class AsyncMultipartWriter(AbstractAsyncContextManager[Any]):
             raise RuntimeError(f'Write aborted!\n'
                                f'{self._part_num} parts transmitted, {len(uploaded_parts)} received, {loss}% loss')
 
-    async def write(self, data: bytes, part_num: Optional[int] = None) -> None:
+    async def write(self, data: Any, part_num: Optional[int] = None) -> None:
         if ((self.mode == 'wb' and not isinstance(data, bytes))
                 or (self.mode in ['w', 'wt'] and not isinstance(data, str))):
             raise ValueError(f"invalid data type for mode '{self.mode}'")
@@ -295,7 +295,7 @@ class S3Reader(AbstractContextManager[Any]):
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.stream.close()
 
-    def read(self, chunk: Optional[int] = None) -> Union[str, bytes]:
+    def read(self, chunk: Optional[int] = None) -> Any:
         data = self.stream.read(chunk)
         if self.mode != 'rb':
             data = data.decode('utf-8')

@@ -76,7 +76,7 @@ class S3Connector(Connector):
         bucket, key = self._split_path(path)
         if mode in ['r', 'rb', 'rt']:
             stream = S3Reader(client, bucket=bucket, key=key, mode=mode)
-        elif mode == ['w', 'wb', 'wt']:
+        elif mode in ['w', 'wb', 'wt']:
             if multipart:
                 stream = MultipartWriter(client, bucket=bucket, key=key, mode=mode)
             else:
