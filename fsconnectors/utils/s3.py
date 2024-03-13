@@ -1,6 +1,6 @@
 import tempfile
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import asynctempfile
 
@@ -16,17 +16,22 @@ class MultipartWriter(AbstractContextManager[Any]):
         S3 bucket.
     key : str
         S3 file key.
+    mode : str = 'wb'
+        Write mode.
     """
 
     def __init__(
         self,
         client: Any,
         bucket: str,
-        key: str
+        key: str,
+        mode: str = 'wb'
     ):
+        assert mode in ['wb', 'w', 'wt'], f"invalid mode: '{mode}'"
         self.client = client
         self.bucket = bucket
         self.key = key
+        self.mode = mode
         self._upload_id = ''
         self._part_num = 0
         self._part_info: dict[Any, Any] = {'Parts': []}
@@ -62,13 +67,18 @@ class MultipartWriter(AbstractContextManager[Any]):
             raise RuntimeError(f'Write aborted!\n'
                                f'{self._part_num} parts transmitted, {len(uploaded_parts)} received, {loss}% loss')
 
-    def write(self, data: bytes, part_num: Optional[int] = None) -> None:
+    def write(self, data: Any, part_num: Optional[int] = None) -> None:
+        if ((self.mode == 'wb' and not isinstance(data, bytes))
+                or (self.mode in ['w', 'wt'] and not isinstance(data, str))):
+            raise ValueError(f"invalid data type for mode '{self.mode}'")
         if part_num is None:
             part_num = self._part_num = self._part_num + 1
         elif 1 <= part_num <= 10000:
             self._part_num += 1
         else:
             raise ValueError('part_num must be an integer between 1 and 1000')
+        if self.mode != 'wb':
+            data = data.encode('utf-8')
         resp = self.client.upload_part(Bucket=self.bucket, Body=data,
                                        UploadId=self._upload_id, PartNumber=part_num, Key=self.key)
         self._part_info['Parts'].append(
@@ -90,17 +100,22 @@ class AsyncMultipartWriter(AbstractAsyncContextManager[Any]):
         S3 bucket.
     key : str
         S3 file key.
+    mode : str = 'wb'
+        Write mode.
     """
 
     def __init__(
         self,
         client: Any,
         bucket: str,
-        key: str
+        key: str,
+        mode: str = 'wb'
     ):
+        assert mode in ['wb', 'w', 'wt'], f"invalid mode: '{mode}'"
         self.client = client
         self.bucket = bucket
         self.key = key
+        self.mode = mode
         self._upload_id = ''
         self._part_num: int = 0
         self._part_info: dict[Any, Any] = {'Parts': []}
@@ -136,13 +151,18 @@ class AsyncMultipartWriter(AbstractAsyncContextManager[Any]):
             raise RuntimeError(f'Write aborted!\n'
                                f'{self._part_num} parts transmitted, {len(uploaded_parts)} received, {loss}% loss')
 
-    async def write(self, data: bytes, part_num: Optional[int] = None) -> None:
+    async def write(self, data: Any, part_num: Optional[int] = None) -> None:
+        if ((self.mode == 'wb' and not isinstance(data, bytes))
+                or (self.mode in ['w', 'wt'] and not isinstance(data, str))):
+            raise ValueError(f"invalid data type for mode '{self.mode}'")
         if part_num is None:
             part_num = self._part_num = self._part_num + 1
         elif 1 <= part_num <= 10000:
             self._part_num += 1
         else:
             raise ValueError('part_num must be an integer between 1 and 1000')
+        if self.mode != 'wb':
+            data = data.encode('utf-8')
         resp = await self.client.upload_part(Bucket=self.bucket, Body=data,
                                              UploadId=self._upload_id, PartNumber=part_num, Key=self.key)
         self._part_info['Parts'].append(
@@ -164,27 +184,35 @@ class SinglepartWriter(AbstractContextManager[Any]):
         S3 bucket.
     key : str
         S3 file key.
+    mode : str = 'wb'
+        Write mode.
     """
 
     def __init__(
         self,
         client: Any,
         bucket: str,
-        key: str
+        key: str,
+        mode: str = 'wb'
     ):
+        assert mode in ['wb', 'w', 'wt'], f"invalid mode: '{mode}'"
         self.client = client
         self.bucket = bucket
         self.key = key
+        self.mode = mode
 
     def __enter__(self) -> 'SinglepartWriter':
-        self.file = tempfile.NamedTemporaryFile()
+        self.file = tempfile.NamedTemporaryFile(self.mode)
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         self.file.seek(0)
-        self.client.put_object(Body=self.file.read(), Bucket=self.bucket, Key=self.key)
+        data = self.file.read()
+        if self.mode != 'wb':
+            data = data.encode('utf-8')
+        self.client.put_object(Body=data, Bucket=self.bucket, Key=self.key)
 
-    def write(self, data: bytes) -> None:
+    def write(self, data: Union[str, bytes]) -> None:
         self.file.write(data)
 
 
@@ -199,27 +227,35 @@ class AsyncSinglepartWriter(AbstractAsyncContextManager[Any]):
         S3 bucket.
     key : str
         S3 file key.
+    mode : str = 'wb'
+        Write mode.
     """
 
     def __init__(
         self,
         client: Any,
         bucket: str,
-        key: str
+        key: str,
+        mode: str = 'wb'
     ):
+        assert mode in ['wb', 'w', 'wt'], f"invalid mode: '{mode}'"
         self.client = client
         self.bucket = bucket
         self.key = key
+        self.mode = mode
 
     async def __aenter__(self) -> 'AsyncSinglepartWriter':
-        self.file = await asynctempfile.TemporaryFile()
+        self.file = await asynctempfile.TemporaryFile(self.mode)
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         await self.file.seek(0)
-        await self.client.put_object(Body=await self.file.read(), Bucket=self.bucket, Key=self.key)
+        data = await self.file.read()
+        if self.mode != 'wb':
+            data = data.encode('utf-8')
+        await self.client.put_object(Body=data, Bucket=self.bucket, Key=self.key)
 
-    async def write(self, data: bytes) -> None:
+    async def write(self, data: Union[str, bytes]) -> None:
         await self.file.write(data)
 
 
@@ -234,17 +270,22 @@ class S3Reader(AbstractContextManager[Any]):
         S3 bucket.
     key : str
         S3 file key.
+    mode : str = 'rb'
+        Read mode.
     """
 
     def __init__(
         self,
         client: Any,
         bucket: str,
-        key: str
+        key: str,
+        mode: str = 'rb'
     ):
+        assert mode in ['rb', 'r', 'rt'], f"invalid mode: '{mode}'"
         self.client = client
         self.bucket = bucket
         self.key = key
+        self.mode = mode
 
     def __enter__(self) -> 'S3Reader':
         obj = self.client.get_object(Bucket=self.bucket, Key=self.key)
@@ -255,7 +296,10 @@ class S3Reader(AbstractContextManager[Any]):
         self.stream.close()
 
     def read(self, chunk: Optional[int] = None) -> Any:
-        return self.stream.read(chunk)
+        data = self.stream.read(chunk)
+        if self.mode != 'rb':
+            data = data.decode('utf-8')
+        return data
 
 
 class AsyncS3Reader(AbstractAsyncContextManager[Any]):
@@ -269,17 +313,22 @@ class AsyncS3Reader(AbstractAsyncContextManager[Any]):
         S3 bucket.
     key : str
         S3 file key.
+    mode : str = 'rb'
+        Read mode.
     """
 
     def __init__(
         self,
         client: Any,
         bucket: str,
-        key: str
+        key: str,
+        mode: str = 'rb'
     ):
+        assert mode in ['rb', 'r', 'rt'], f"invalid mode: '{mode}'"
         self.client = client
         self.bucket = bucket
         self.key = key
+        self.mode = mode
 
     async def __aenter__(self) -> 'AsyncS3Reader':
         obj = await self.client.get_object(Bucket=self.bucket, Key=self.key)
@@ -290,4 +339,7 @@ class AsyncS3Reader(AbstractAsyncContextManager[Any]):
         self.stream.close()
 
     async def read(self, chunk: Optional[int] = None) -> Any:
-        return await self.stream.read(chunk)
+        data = await self.stream.read(chunk)
+        if self.mode != 'rb':
+            data = data.decode('utf-8')
+        return data

@@ -35,8 +35,8 @@ entries = lc.listdir('.')
 from fsconnectors import S3Connector
 
 sc = S3Connector.from_yaml('path/to/config.yaml')
-with sc.open('bucket/file.txt', 'wb') as f:
-    f.write(b'Hello world!')
+with sc.open('bucket/file.txt', 'w') as f:
+    f.write('Hello world!')
 entries = sc.listdir('bucket')
 ```
 
@@ -67,7 +67,7 @@ asyncio.run(foo())
 * `open(path, mode)` - open file
   * parameters:
     * `path: str` - path to file
-    * `mode: str` - open mode (only 'rb' and 'wb' for S3 connectors)
+    * `mode: str` - open mode
     * `multipart: bool = False` - use multipart writer (only for S3 connectors)
   * returns:
     * `Union[ContextManager, AsyncContextManager]` - file-like object
