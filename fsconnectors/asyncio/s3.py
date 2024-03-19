@@ -183,6 +183,15 @@ class AsyncS3Connector(AsyncConnector):
         fileobj: IO[Any],
         dst_path: str
     ) -> None:
+        """Upload file object
+
+        Parameters
+        ----------
+        fileobj : IO[Any]
+            File object to upload.
+        dst_path : str
+            Destination path.
+        """
         bucket, key = self._split_path(dst_path)
         await self.client.upload_fileobj(fileobj, bucket, key)
 

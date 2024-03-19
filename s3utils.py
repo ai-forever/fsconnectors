@@ -20,6 +20,15 @@ from fsconnectors.utils.s3 import (
 
 
 class S3Util:
+    """Async S3 upload/download class.
+
+    Attributes
+    ----------
+    s3_connector : AsyncConnector
+        Async S3 connector.
+    local_connector : AsyncConnector
+        Async local connector.
+    """
 
     def __init__(
         self,
@@ -39,8 +48,36 @@ class S3Util:
         chunk_size: int = 1024 * 1024 * 16,
         large_file_size: int = 1024 * 1024 * 128,
         max_chunks_number: int = 999,
-        timeout: int = 3
+        delay: int = 3
     ) -> list[str]:
+        """Upload to S3.
+
+        Parameters
+        ----------
+        local_path : str
+            Local directory path.
+        s3_path : str
+            S3 directory path.
+        num_workers : int, default=16
+            Max workers.
+        multipart : bool, default=False
+            Use multipart upload.
+        num_retries : int, default=3
+            Max retries per file.
+        chunk_size : int, default=1024 * 1024 * 16
+            Chunk size in bytes for multipart upload if enabled.
+        large_file_size : int, default=1024 * 1024 * 128
+            Min file size for multipart upload if enabled.
+        max_chunks_number : int, default=999
+            Max chunks for multipart upload if enabled.
+        delay : int, default=3
+            Retry delay.
+
+        Returns
+        -------
+        list[str]
+            Error files.
+        """
         s3_path, local_path = self._prepare_paths(s3_path, local_path)
         async with self.local_connector.connect() as lc:
             async with self.s3_connector.connect() as sc:
@@ -52,16 +89,16 @@ class S3Util:
                     small_files, large_files = self._split_small_large_files(files, large_file_size)
                     error_files += await self._upload_files(
                         lc, sc, small_files, local_path, s3_path,
-                        files_pbar, bytes_pbar, num_workers, num_retries, timeout
+                        files_pbar, bytes_pbar, num_workers, num_retries, delay
                     )
                     error_files += await self._upload_files_multipart(
                         lc, sc, large_files, local_path, s3_path, files_pbar, bytes_pbar,
-                        num_workers, num_retries, chunk_size, max_chunks_number, timeout
+                        num_workers, num_retries, chunk_size, max_chunks_number, delay
                     )
                 else:
                     error_files += await self._upload_files(
                         lc, sc, files, local_path, s3_path,
-                        files_pbar, bytes_pbar, num_workers, num_retries, timeout
+                        files_pbar, bytes_pbar, num_workers, num_retries, delay
                     )
         return error_files
 
@@ -72,8 +109,30 @@ class S3Util:
         num_workers: int = 16,
         num_retries: int = 3,
         chunk_size: int = 1024 * 1024 * 16,
-        timeout: int = 3
+        delay: int = 3
     ) -> list[str]:
+        """Download from S3.
+
+        Parameters
+        ----------
+        local_path : str
+            Local directory path.
+        s3_path : str
+            S3 directory path.
+        num_workers : int, default=16
+            Max workers.
+        num_retries : int, default=3
+            Max retries per file.
+        chunk_size : int, default=1024 * 1024 * 16
+            Chunk size in bytes.
+        delay : int, default=3
+            Retry delay.
+
+        Returns
+        -------
+        list[str]
+            Error files.
+        """
         s3_path, local_path = self._prepare_paths(s3_path, local_path)
         async with self.local_connector.connect() as lc:
             async with self.s3_connector.connect() as sc:
@@ -87,7 +146,7 @@ class S3Util:
                             destination_path = file.path.replace(s3_path, local_path, 1)
                             status = await pool.spawn(self._download_file(
                                 lc, sc, file.path, destination_path, file.size,
-                                files_pbar, bytes_pbar, chunk_size, num_retries, timeout
+                                files_pbar, bytes_pbar, chunk_size, num_retries, delay
                             ))
                             if not status:
                                 error_files.append(file.path)
@@ -104,7 +163,7 @@ class S3Util:
         bytes_pbar: tqdm,
         num_workers: int = 16,
         num_retries: int = 3,
-        timeout: int = 3
+        delay: int = 3
     ) -> list[str]:
         error_files = []
         async with asyncio_pool.AioPool(size=num_workers) as pool:
@@ -113,7 +172,7 @@ class S3Util:
                     destination_path = file.path.replace(local_path, s3_path, 1)
                     status = await pool.spawn(self._upload_file(
                         local_connection, s3_connection, file.path, destination_path, file.size,
-                        files_pbar, bytes_pbar, num_retries, timeout
+                        files_pbar, bytes_pbar, num_retries, delay
                     ))
                     if not status:
                         error_files.append(file.path)
@@ -129,7 +188,7 @@ class S3Util:
         files_pbar: tqdm,
         bytes_pbar: tqdm,
         num_retries: int = 3,
-        timeout: int = 3
+        delay: int = 3
     ) -> bool:
         retries = 0
         while retries < num_retries:
@@ -138,14 +197,12 @@ class S3Util:
                 async with local_connection.open(source_path, 'rb') as src_file:
                     if isinstance(s3_connection, AsyncS3Connector):
                         await s3_connection.upload_fileobj(src_file, destination_path)
-                    # async with s3_connection.open(destination_path, 'wb') as dst_file:
-                    #     await dst_file.write(await src_file.read())
                 files_pbar.update(1)
                 bytes_pbar.update(file_size)
                 return True
             except Exception as err:
                 err_msg = err
-                await asyncio.sleep(timeout)
+                await asyncio.sleep(delay)
         print(err_msg)
         files_pbar.update(1)
         bytes_pbar.update(file_size)
@@ -164,7 +221,7 @@ class S3Util:
         num_retries: int = 3,
         chunk_size: int = 1024 * 1024 * 16,
         max_chunks_number: int = 999,
-        timeout: int = 3
+        delay: int = 3
     ) -> list[str]:
         error_files = []
         for file in files:
@@ -172,7 +229,7 @@ class S3Util:
                 destination_path = file.path.replace(local_path, s3_path, 1)
                 status = await self._upload_file_multipart(
                     local_connection, s3_connection, file.path, destination_path, file.size,
-                    files_pbar, bytes_pbar, num_workers, num_retries, chunk_size, max_chunks_number, timeout
+                    files_pbar, bytes_pbar, num_workers, num_retries, chunk_size, max_chunks_number, delay
                 )
                 if not status:
                     error_files.append(file.path)
@@ -191,7 +248,7 @@ class S3Util:
         num_retries: int = 3,
         chunk_size: int = 1024 * 1024 * 16,
         max_chunks_number: int = 999,
-        timeout: int = 3
+        delay: int = 3
     ) -> bool:
         chunks_number = int(math.ceil(file_size / float(chunk_size)))
         if chunks_number > max_chunks_number:
@@ -213,7 +270,7 @@ class S3Util:
                 return True
             except Exception as err:
                 err_msg = err
-                await asyncio.sleep(timeout)
+                await asyncio.sleep(delay)
         print(err_msg)
         files_pbar.update(1)
         bytes_pbar.update(file_size)
@@ -241,7 +298,7 @@ class S3Util:
         bytes_pbar: tqdm,
         chunk_size: int = 1024 * 1024 * 16,
         num_retries: int = 3,
-        timeout: int = 3
+        delay: int = 3
     ) -> bool:
         retries = 0
         await local_connection.mkdir(os.path.dirname(destination_path))
@@ -259,7 +316,7 @@ class S3Util:
                 return True
             except Exception as err:
                 err_msg = err
-                await asyncio.sleep(timeout)
+                await asyncio.sleep(delay)
         print(err_msg)
         files_pbar.update(1)
         bytes_pbar.update(file_size)
@@ -298,8 +355,8 @@ async def main() -> None:
     download_parser = subparsers.add_parser('download', help='download from S3')
     subparsers.required = True
     for subparser in [upload_parser, download_parser]:
-        subparser.add_argument('--s3_path', required=True, type=str, help='S3 path to folder or file')
-        subparser.add_argument('--local_path', required=True, type=str, help='local path to folder or file')
+        subparser.add_argument('--s3_path', required=True, type=str, help='S3 folder path')
+        subparser.add_argument('--local_path', required=True, type=str, help='local folder path')
         subparser.add_argument('--config_path', required=True, type=str, help='path to configuration file')
         subparser.add_argument('--workers', type=int, default=16, help='max workers')
     upload_parser.add_argument('--multipart', action='store_true', dest='multipart', help='use multipart upload')

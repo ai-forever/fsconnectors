@@ -167,6 +167,15 @@ class S3Connector(Connector):
         fileobj: IO[Any],
         dst_path: str
     ) -> None:
+        """Upload file object
+
+        Parameters
+        ----------
+        fileobj : IO[Any]
+            File object to upload.
+        dst_path : str
+            Destination path.
+        """
         client = self._get_client()
         bucket, key = self._split_path(dst_path)
         client.upload_fileobj(fileobj, bucket, key)

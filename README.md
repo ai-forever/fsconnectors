@@ -10,6 +10,9 @@ File system connectors.
 * [API](#api)
   * [Connector](#connector)
   * [FSEntry](#fsentry)
+* [CLI](#CLI)
+  * [Upload](#upload)
+  * [Download](#download)
 
 ## Installation
 ```commandline
@@ -108,3 +111,30 @@ File system entry metadata
 * `type: Literal['file', 'dir']` - entry type
 * `size: Optional[int] = None` - entry size in bytes (only for files)
 * `last_modified: Optional[datetime.datetime] = None` - last modified (only for files)
+
+## CLI
+
+### Upload
+```
+python s3utils.py upload [-h] --s3_path S3_PATH --local_path LOCAL_PATH --config_path CONFIG_PATH [--workers WORKERS] [--multipart]
+
+optional arguments:
+  -h, --help                show this help message and exit
+  --s3_path S3_PATH         S3 folder path
+  --local_path LOCAL_PATH   local folder path
+  --config_path CONFIG_PATH path to configuration file
+  --workers WORKERS         max workers
+  --multipart               use multipart upload
+```
+
+### Download
+```
+python s3utils download [-h] --s3_path S3_PATH --local_path LOCAL_PATH --config_path CONFIG_PATH [--workers WORKERS]
+
+optional arguments:
+  -h, --help                show this help message and exit
+  --s3_path S3_PATH         S3 folder path
+  --local_path LOCAL_PATH   local folder path
+  --config_path CONFIG_PATH path to configuration file
+  --workers WORKERS         max workers
+```
