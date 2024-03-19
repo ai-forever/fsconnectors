@@ -19,7 +19,8 @@ dependencies = [
   "aioboto3",
   "aiofiles",
   "aioshutil",
-  "asynctempfile"
+  "asynctempfile",
+  "asyncio-pool"
 ]
 
 [project.optional-dependencies]

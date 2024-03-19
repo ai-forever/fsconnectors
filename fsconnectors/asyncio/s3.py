@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Any, Union
+from typing import IO, Any, Union
 
 import aioboto3
 import yaml
@@ -177,6 +177,14 @@ class AsyncS3Connector(AsyncConnector):
                     last_modified = item.get('LastModified')
                     result.append(FSEntry(name, path, 'file', size, last_modified))
         return result
+
+    async def upload_fileobj(
+        self,
+        fileobj: IO[Any],
+        dst_path: str
+    ) -> None:
+        bucket, key = self._split_path(dst_path)
+        await self.client.upload_fileobj(fileobj, bucket, key)
 
     @staticmethod
     def _split_path(path: str) -> list[str]:
