@@ -19,7 +19,7 @@ from fsconnectors.utils.s3 import (
 )
 
 
-class S3Util:
+class CLI:
     """Async S3 upload/download class.
 
     Attributes
@@ -346,9 +346,9 @@ class S3Util:
 
 async def main() -> None:
     parser = argparse.ArgumentParser(
-        prog='s3utils',
+        prog='fsconnectors',
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='to see action help message:\n  s3utils upload -h\n  s3utils download -h'
+        epilog='to see action help message:\n  fsconnectors upload -h\n  fsconnectors download -h'
     )
     subparsers = parser.add_subparsers(dest='action')
     upload_parser = subparsers.add_parser('upload', help='upload to S3')
@@ -365,7 +365,7 @@ async def main() -> None:
     s3_connector = AsyncS3Connector.from_yaml(args.config_path)
     local_connector = AsyncLocalConnector()
 
-    s3util = S3Util(s3_connector, local_connector)
+    s3util = CLI(s3_connector, local_connector)
     if args.action == 'upload':
         error_files = await s3util.upload(local_path=args.local_path, s3_path=args.s3_path,
                                           num_workers=args.workers, multipart=args.multipart)
@@ -375,7 +375,3 @@ async def main() -> None:
         print(f'Error files: {error_files}')
     else:
         raise ValueError(f"invalid action: '{args.action}'")
-
-
-if __name__ == '__main__':
-    asyncio.run(main())

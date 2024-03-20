@@ -11,6 +11,7 @@ name = 'fsconnectors'
 dynamic = [
   'version'
 ]
+
 readme = 'README.md'
 requires-python = '>=3.9'
 dependencies = [
@@ -20,7 +21,8 @@ dependencies = [
   "aiofiles",
   "aioshutil",
   "asynctempfile",
-  "asyncio-pool"
+  "asyncio-pool",
+  "tqdm"
 ]
 
 [project.optional-dependencies]

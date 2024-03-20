@@ -116,7 +116,7 @@ File system entry metadata
 
 ### Upload
 ```
-python s3utils.py upload [-h] --s3_path S3_PATH --local_path LOCAL_PATH --config_path CONFIG_PATH [--workers WORKERS] [--multipart]
+python -m fsconnectors upload [-h] --s3_path S3_PATH --local_path LOCAL_PATH --config_path CONFIG_PATH [--workers WORKERS] [--multipart]
 
 optional arguments:
   -h, --help                show this help message and exit
@@ -129,7 +129,7 @@ optional arguments:
 
 ### Download
 ```
-python s3utils download [-h] --s3_path S3_PATH --local_path LOCAL_PATH --config_path CONFIG_PATH [--workers WORKERS]
+python -m fsconnectors download [-h] --s3_path S3_PATH --local_path LOCAL_PATH --config_path CONFIG_PATH [--workers WORKERS]
 
 optional arguments:
   -h, --help                show this help message and exit
