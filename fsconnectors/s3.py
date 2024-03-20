@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import IO, Any, Union
 
 import boto3
 import yaml
@@ -161,6 +161,24 @@ class S3Connector(Connector):
                     result.append(FSEntry(name, path, 'file', size, last_modified))
         client.close()
         return result
+
+    def upload_fileobj(
+        self,
+        fileobj: IO[Any],
+        dst_path: str
+    ) -> None:
+        """Upload file object
+
+        Parameters
+        ----------
+        fileobj : IO[Any]
+            File object to upload.
+        dst_path : str
+            Destination path.
+        """
+        client = self._get_client()
+        bucket, key = self._split_path(dst_path)
+        client.upload_fileobj(fileobj, bucket, key)
 
     def _get_client(self) -> Any:
         client = boto3.session.Session().client(
