@@ -95,8 +95,6 @@ class S3Connector(Connector):
     def copy(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         client = self._get_client()
         if recursive:
-            src_path = src_path.rstrip('/')
-            dst_path = dst_path.rstrip('/')
             src_bucket, src_key = self._split_path(src_path)
             dst_bucket, dst_key = self._split_path(dst_path)
             paths = self.listdir(src_path, recursive)
@@ -136,7 +134,6 @@ class S3Connector(Connector):
     def scandir(self, path: str, recursive: bool = False, dirs: bool = False) -> list[FSEntry]:
         client = self._get_client()
         result = []
-        path = path.rstrip('/')
         bucket, prefix = self._split_path(path)
         paginator = client.get_paginator('list_objects')
         if recursive:
