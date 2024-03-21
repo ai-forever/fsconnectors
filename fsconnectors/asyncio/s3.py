@@ -141,15 +141,15 @@ class AsyncS3Connector(AsyncConnector):
             bucket, key = self._split_path(path)
             await self.client.delete_object(Bucket=bucket, Key=key)
 
-    async def listdir(self, path: str, recursive: bool = False, dirs: bool = False) -> list[str]:
-        entries = await self.scandir(path, recursive, dirs)
+    async def listdir(self, path: str, recursive: bool = False) -> list[str]:
+        entries = await self.scandir(path, recursive)
         if recursive:
             result = [entry.path for entry in entries]
         else:
             result = [entry.name for entry in entries]
         return result
 
-    async def scandir(self, path: str, recursive: bool = False, dirs: bool = False) -> list[FSEntry]:
+    async def scandir(self, path: str, recursive: bool = False) -> list[FSEntry]:
         result = []
         bucket, prefix = self._split_path(path)
         paginator = self.client.get_paginator('list_objects')
@@ -166,19 +166,18 @@ class AsyncS3Connector(AsyncConnector):
                     size = item.get('Size')
                     last_modified = item.get('LastModified')
                     result.append(FSEntry(name, path, 'file', size, last_modified))
-        if dirs:
-            paginator = self.client.get_paginator('list_objects')
-            if recursive:
-                paginator_result = paginator.paginate(Bucket=bucket, Prefix=prefix, PaginationConfig={'PageSize': 1000})
-            else:
-                paginator_result = paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter='/',
-                                                      PaginationConfig={'PageSize': 1000})
-            async for item in paginator_result.search('CommonPrefixes'):
-                if item:
-                    path = bucket + '/' + item.get('Prefix')
-                    name = path.split('/')[-2]
-                    if name:
-                        result.append(FSEntry(name, path, 'dir'))
+        paginator = self.client.get_paginator('list_objects')
+        if recursive:
+            paginator_result = paginator.paginate(Bucket=bucket, Prefix=prefix, PaginationConfig={'PageSize': 1000})
+        else:
+            paginator_result = paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter='/',
+                                                  PaginationConfig={'PageSize': 1000})
+        async for item in paginator_result.search('CommonPrefixes'):
+            if item:
+                path = bucket + '/' + item.get('Prefix')
+                name = path.split('/')[-2]
+                if name:
+                    result.append(FSEntry(name, path, 'dir'))
         return result
 
     async def upload_fileobj(
