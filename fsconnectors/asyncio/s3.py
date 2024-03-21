@@ -115,8 +115,6 @@ class AsyncS3Connector(AsyncConnector):
 
     async def copy(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         if recursive:
-            src_path = src_path.rstrip('/') + '/'
-            dst_path = dst_path.rstrip('/') + '/'
             src_bucket, src_key = self._split_path(src_path)
             dst_bucket, dst_key = self._split_path(dst_path)
             paths = await self.listdir(src_path, recursive)
@@ -135,7 +133,6 @@ class AsyncS3Connector(AsyncConnector):
 
     async def remove(self, path: str, recursive: bool = False) -> None:
         if recursive:
-            path = path.rstrip('/') + '/'
             paths = await self.listdir(path, recursive)
             for path in paths:
                 path_bucket, path_key = self._split_path(path)
@@ -154,8 +151,21 @@ class AsyncS3Connector(AsyncConnector):
 
     async def scandir(self, path: str, recursive: bool = False) -> list[FSEntry]:
         result = []
-        path = path.rstrip('/') + '/'
         bucket, prefix = self._split_path(path)
+        paginator = self.client.get_paginator('list_objects')
+        if recursive:
+            paginator_result = paginator.paginate(Bucket=bucket, Prefix=prefix, PaginationConfig={'PageSize': 1000})
+        else:
+            paginator_result = paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter='/',
+                                                  PaginationConfig={'PageSize': 1000})
+        async for item in paginator_result.search('Contents'):
+            if item:
+                path = bucket + '/' + item.get('Key')
+                name = path.split('/')[-1]
+                if name:
+                    size = item.get('Size')
+                    last_modified = item.get('LastModified')
+                    result.append(FSEntry(name, path, 'file', size, last_modified))
         paginator = self.client.get_paginator('list_objects')
         if recursive:
             paginator_result = paginator.paginate(Bucket=bucket, Prefix=prefix, PaginationConfig={'PageSize': 1000})
@@ -168,14 +178,6 @@ class AsyncS3Connector(AsyncConnector):
                 name = path.split('/')[-2]
                 if name:
                     result.append(FSEntry(name, path, 'dir'))
-        async for item in paginator_result.search('Contents'):
-            if item:
-                path = bucket + '/' + item.get('Key')
-                name = path.split('/')[-1]
-                if name:
-                    size = item.get('Size')
-                    last_modified = item.get('LastModified')
-                    result.append(FSEntry(name, path, 'file', size, last_modified))
         return result
 
     async def upload_fileobj(

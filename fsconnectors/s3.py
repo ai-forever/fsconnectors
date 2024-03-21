@@ -95,8 +95,6 @@ class S3Connector(Connector):
     def copy(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         client = self._get_client()
         if recursive:
-            src_path = src_path.rstrip('/') + '/'
-            dst_path = dst_path.rstrip('/') + '/'
             src_bucket, src_key = self._split_path(src_path)
             dst_bucket, dst_key = self._split_path(dst_path)
             paths = self.listdir(src_path, recursive)
@@ -116,7 +114,6 @@ class S3Connector(Connector):
     def remove(self, path: str, recursive: bool = False) -> None:
         client = self._get_client()
         if recursive:
-            path = path.rstrip('/') + '/'
             paths = self.listdir(path, recursive)
             for path in paths:
                 path_bucket, path_key = self._split_path(path)
@@ -137,8 +134,21 @@ class S3Connector(Connector):
     def scandir(self, path: str, recursive: bool = False) -> list[FSEntry]:
         client = self._get_client()
         result = []
-        path = path.rstrip('/') + '/'
         bucket, prefix = self._split_path(path)
+        paginator = client.get_paginator('list_objects')
+        if recursive:
+            paginator_result = paginator.paginate(Bucket=bucket, Prefix=prefix, PaginationConfig={'PageSize': 1000})
+        else:
+            paginator_result = paginator.paginate(Bucket=bucket, Prefix=prefix, Delimiter='/',
+                                                  PaginationConfig={'PageSize': 1000})
+        for item in paginator_result.search('Contents'):
+            if item:
+                path = bucket + '/' + item.get('Key')
+                name = path.split('/')[-1]
+                if name:
+                    size = item.get('Size')
+                    last_modified = item.get('LastModified')
+                    result.append(FSEntry(name, path, 'file', size, last_modified))
         paginator = client.get_paginator('list_objects')
         if recursive:
             paginator_result = paginator.paginate(Bucket=bucket, Prefix=prefix, PaginationConfig={'PageSize': 1000})
@@ -151,14 +161,6 @@ class S3Connector(Connector):
                 name = path.split('/')[-2]
                 if name:
                     result.append(FSEntry(name, path, 'dir'))
-        for item in paginator_result.search('Contents'):
-            if item:
-                path = bucket + '/' + item.get('Key')
-                name = path.split('/')[-1]
-                if name:
-                    size = item.get('Size')
-                    last_modified = item.get('LastModified')
-                    result.append(FSEntry(name, path, 'file', size, last_modified))
         client.close()
         return result
 
