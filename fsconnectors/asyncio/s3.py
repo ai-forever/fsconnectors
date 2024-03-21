@@ -115,8 +115,8 @@ class AsyncS3Connector(AsyncConnector):
 
     async def copy(self, src_path: str, dst_path: str, recursive: bool = False) -> None:
         if recursive:
-            src_path = src_path.rstrip('/') + '/'
-            dst_path = dst_path.rstrip('/') + '/'
+            src_path = src_path.rstrip('/')
+            dst_path = dst_path.rstrip('/')
             src_bucket, src_key = self._split_path(src_path)
             dst_bucket, dst_key = self._split_path(dst_path)
             paths = await self.listdir(src_path, recursive)
@@ -135,7 +135,6 @@ class AsyncS3Connector(AsyncConnector):
 
     async def remove(self, path: str, recursive: bool = False) -> None:
         if recursive:
-            path = path.rstrip('/') + '/'
             paths = await self.listdir(path, recursive)
             for path in paths:
                 path_bucket, path_key = self._split_path(path)
@@ -154,7 +153,7 @@ class AsyncS3Connector(AsyncConnector):
 
     async def scandir(self, path: str, recursive: bool = False, dirs: bool = False) -> list[FSEntry]:
         result = []
-        path = path.rstrip('/') + '/'
+        path = path.rstrip('/')
         bucket, prefix = self._split_path(path)
         paginator = self.client.get_paginator('list_objects')
         if recursive:
