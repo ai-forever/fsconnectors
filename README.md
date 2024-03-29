@@ -15,7 +15,11 @@ File system connectors.
   * [Download](#download)
 
 ## Installation
-```commandline
+```bash
+pip install git+https://github.com/ai-forever/fsconnectors.git
+```
+or
+```bash
 git clone https://github.com/ai-forever/fsconnectors
 cd fsconnectors/
 pip install .
