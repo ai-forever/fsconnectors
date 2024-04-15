@@ -200,4 +200,7 @@ class AsyncS3Connector(AsyncConnector):
     @staticmethod
     def _split_path(path: str) -> list[str]:
         path = path.split('://')[-1]
-        return path.split('/', maxsplit=1)
+        parts = path.split('/', maxsplit=1)
+        if len(parts) == 1:
+            parts.append('')
+        return parts
