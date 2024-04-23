@@ -202,7 +202,7 @@ class SinglepartWriter(AbstractContextManager[Any]):
         self.mode = mode
 
     def __enter__(self) -> 'SinglepartWriter':
-        self.file = tempfile.NamedTemporaryFile(self.mode)
+        self.file = tempfile.NamedTemporaryFile(f'{self.mode}+')
         return self
 
     def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
@@ -211,6 +211,7 @@ class SinglepartWriter(AbstractContextManager[Any]):
         if self.mode != 'wb':
             data = data.encode('utf-8')
         self.client.put_object(Body=data, Bucket=self.bucket, Key=self.key)
+        self.file.close()
 
     def write(self, data: Union[str, bytes]) -> None:
         self.file.write(data)
@@ -245,7 +246,7 @@ class AsyncSinglepartWriter(AbstractAsyncContextManager[Any]):
         self.mode = mode
 
     async def __aenter__(self) -> 'AsyncSinglepartWriter':
-        self.file = await asynctempfile.TemporaryFile(self.mode)
+        self.file = await asynctempfile.NamedTemporaryFile(f'{self.mode}+')
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
@@ -254,6 +255,7 @@ class AsyncSinglepartWriter(AbstractAsyncContextManager[Any]):
         if self.mode != 'wb':
             data = data.encode('utf-8')
         await self.client.put_object(Body=data, Bucket=self.bucket, Key=self.key)
+        await self.file.close()
 
     async def write(self, data: Union[str, bytes]) -> None:
         await self.file.write(data)
