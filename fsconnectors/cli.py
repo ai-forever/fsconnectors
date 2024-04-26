@@ -134,7 +134,6 @@ class CLI:
             Error files.
         """
         s3_path, local_path = self._prepare_paths(s3_path, local_path)
-        print(s3_path, local_path)
         async with self.local_connector.connect() as lc:
             async with self.s3_connector.connect() as sc:
                 files = await sc.scandir(s3_path, recursive=True)
