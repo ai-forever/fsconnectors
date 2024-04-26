@@ -326,8 +326,8 @@ class CLI:
     def _prepare_paths(s3_path: str, local_path: str) -> tuple[str, str]:
         if platform.system() == 'Windows':
             local_path = re.sub(r'\\+', '/', local_path)
-        s3_path = s3_path.split('://')[-1].rstrip('/')
-        local_path = local_path.rstrip('/')
+        s3_path = s3_path.split('://')[-1].rstrip('/') + '/'
+        local_path = local_path.rstrip('/') + '/'
         return s3_path, local_path
 
     @staticmethod
