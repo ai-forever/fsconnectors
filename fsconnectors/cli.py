@@ -134,7 +134,6 @@ class CLI:
             Error files.
         """
         s3_path, local_path = self._prepare_paths(s3_path, local_path)
-        print(s3_path, local_path)
         async with self.local_connector.connect() as lc:
             async with self.s3_connector.connect() as sc:
                 files = await sc.scandir(s3_path, recursive=True)
@@ -327,8 +326,8 @@ class CLI:
     def _prepare_paths(s3_path: str, local_path: str) -> tuple[str, str]:
         if platform.system() == 'Windows':
             local_path = re.sub(r'\\+', '/', local_path)
-        s3_path = s3_path.split('://')[-1].rstrip('/')
-        local_path = local_path.rstrip('/')
+        s3_path = s3_path.split('://')[-1].rstrip('/') + '/'
+        local_path = local_path.rstrip('/') + '/'
         return s3_path, local_path
 
     @staticmethod
