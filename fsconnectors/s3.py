@@ -2,6 +2,7 @@ from typing import IO, Any, Union
 
 import boto3
 import yaml
+from botocore.client import Config
 
 from fsconnectors.connector import Connector
 from fsconnectors.utils.entry import FSEntry
@@ -187,7 +188,8 @@ class S3Connector(Connector):
             's3',
             endpoint_url=self.endpoint_url,
             aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key
+            aws_secret_access_key=self.aws_secret_access_key,
+            config=Config(s3={'addressing_style': 'virtual'})
         )
         return client
 

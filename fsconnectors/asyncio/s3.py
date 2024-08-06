@@ -4,6 +4,7 @@ from typing import IO, Any, Union
 
 import aioboto3
 import yaml
+from botocore.config import Config
 
 from fsconnectors.asyncio.connector import AsyncConnector
 from fsconnectors.utils.entry import FSEntry
@@ -50,7 +51,8 @@ class AsyncS3Connector(AsyncConnector):
         async with aioboto3.Session().client(
                 's3', endpoint_url=self.endpoint_url,
                 aws_access_key_id=self.aws_access_key_id,
-                aws_secret_access_key=self.aws_secret_access_key
+                aws_secret_access_key=self.aws_secret_access_key,
+                config=Config(s3={'addressing_style': 'virtual'})
         ) as client:
             self.client = client
             yield self
